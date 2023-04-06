@@ -40,7 +40,7 @@ void Inicia_memoria(char *TablaMemoria,TDD TablaDeDatos[]){
         }
         if (i>7){
             TablaMemoria[i-8]=lec;
-            printf("%X %d\n",TablaMemoria[i-8],i-8);
+            //printf("%X %d\n",TablaMemoria[i-8],i-8);
         }
         i++;
     }
