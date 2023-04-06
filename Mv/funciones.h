@@ -54,7 +54,7 @@ char tiporeg;
         if (op1&0x00FF0000==0)
             TablaMemoria[TablaDeDatos[1].pos+op1&0x00FFFF]=valor;
         else
-            TablaMemoria[TablaRegistros[(op1&0x0F0000)>>16]+op1&0x00FFFF]=valor;
+            TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[(op1&0x0F0000)>>16]+op1&0x00FFFF]=valor;
         }else{
             tiporeg=op1>>4;
             if (tiporeg==0)
@@ -80,7 +80,7 @@ char tiporeg;
         if (op1&0x00FF0000==0)
             TablaMemoria[TablaDeDatos[1].pos+op1&0x00FFFF]+=valor;
         else
-            TablaMemoria[TablaRegistros[(op1&0x0F0000)>>16]+op1&0x00FFFF]+=valor;
+            TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[(op1&0x0F0000)>>16]+op1&0x00FFFF]+=valor;
         }else{
             tiporeg=op1>>4;
             if (tiporeg==0)
@@ -102,7 +102,7 @@ char tiporeg;
         if (op1&0x00FF0000==0)
             TablaMemoria[TablaDeDatos[1].pos+op1&0x00FFFF]-=valor;
         else
-            TablaMemoria[TablaRegistros[(op1&0x0F0000)>>16]+op1&0x00FFFF]-=valor;
+            TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[(op1&0x0F0000)>>16]+op1&0x00FFFF]-=valor;
         }else{
             tiporeg=op1>>4;
             if (tiporeg==0)
