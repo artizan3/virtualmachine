@@ -8,8 +8,10 @@ int tamano;
 typedef void Funciones2op(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 
 void MOV(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
+void ADD(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
+void SUB(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 
-Funciones2op *funciones[]={MOV};
+Funciones2op *funciones[]={MOV,ADD,SUB};
 
 long int Operando2(long int op2,char top2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 
@@ -38,9 +40,9 @@ long int Operando2(long int op2,char top2,char *TablaMemoria,long int TablaRegis
     }
     if (top2==0)
         if (op2&0x00FF0000==0)
-            resultado=TablaMemoria[TablaDeDatos[1].pos + op2&0x00FFFF];//DS+offset
+            resultado=TablaMemoria[TablaDeDatos[1].pos + op2&0x00FFFF]; //DS+offset
         else
-            resultado=TablaMemoria[TablaRegistros[(op2&0x0F0000)>>16]+op2&0x00FFFF];
+            resultado=TablaMemoria[TablaRegistros[(op2&0x0F0000)>>16]+op2&0x00FFFF];//valor registro +offset
     if (top2==1)
         resultado=op2;
     return resultado;
@@ -56,7 +58,7 @@ char tiporeg;
         }else{
             tiporeg=op1>>4;
             if (tiporeg==0)
-                TablaRegistros[op1&0x0F]=TablaRegistros[op1&0x0F]&0x00000000;
+                TablaRegistros[op1&0x0F]=0;
             if (tiporeg==1){
                 TablaRegistros[op1&0x0F]=TablaRegistros[op1&0x0F]&0xFFFFFF00;
                 valor=valor&0x000000FF;
@@ -70,6 +72,50 @@ char tiporeg;
                 valor=valor&0x000FFFF;
             }
             TablaRegistros[op1&0x0F]+=valor;
+        }
+}
+void ADD(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
+char tiporeg;
+    if (top1==0){
+        if (op1&0x00FF0000==0)
+            TablaMemoria[TablaDeDatos[1].pos+op1&0x00FFFF]+=valor;
+        else
+            TablaMemoria[TablaRegistros[(op1&0x0F0000)>>16]+op1&0x00FFFF]+=valor;
+        }else{
+            tiporeg=op1>>4;
+            if (tiporeg==0)
+                TablaRegistros[op1&0x0F]+=valor;
+            if (tiporeg==1){
+                TablaRegistros[op1&0x0F]=TablaRegistros[op1&0x0F]&0xFFFFFF00+valor&0x000000FF;
+            }
+            if (tiporeg==2){
+                TablaRegistros[op1&0x0F]=TablaRegistros[op1&0x0F]&0xFFFF00FF+(valor&0x000000FF)<<8;
+            }
+            if (tiporeg==3){
+                TablaRegistros[op1&0x0F]=TablaRegistros[op1&0x0F]&0xFFFF0000+valor&0x000FFFF;
+            }
+        }
+}
+void SUB(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
+char tiporeg;
+    if (top1==0){
+        if (op1&0x00FF0000==0)
+            TablaMemoria[TablaDeDatos[1].pos+op1&0x00FFFF]-=valor;
+        else
+            TablaMemoria[TablaRegistros[(op1&0x0F0000)>>16]+op1&0x00FFFF]-=valor;
+        }else{
+            tiporeg=op1>>4;
+            if (tiporeg==0)
+                TablaRegistros[op1&0x0F]-=valor;
+            if (tiporeg==1){
+                TablaRegistros[op1&0x0F]=TablaRegistros[op1&0x0F]&0xFFFFFF00-valor&0x000000FF;
+            }
+            if (tiporeg==2){
+                TablaRegistros[op1&0x0F]=TablaRegistros[op1&0x0F]&0xFFFF00FF-(valor&0x000000FF)<<8;
+            }
+            if (tiporeg==3){
+                TablaRegistros[op1&0x0F]=TablaRegistros[op1&0x0F]&0xFFFF0000-valor&0x000FFFF;
+            }
         }
 }
 
