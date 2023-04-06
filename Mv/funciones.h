@@ -77,57 +77,76 @@ char tiporeg;
 }
 void ADD(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
     char tiporeg;
-    long int aux=0x00000000;
+    long int aux=0,nz=0;
     if (top1==0){
-        if (op1&0x00FF0000==0)
+        if (op1&0x00FF0000==0){
             TablaMemoria[TablaDeDatos[1].pos+op1&0x00FFFF]+=valor;
-        else
-            TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[(op1&0x0F0000)>>16]+op1&0x00FFFF]+=valor;
-        }else{
-            tiporeg=op1>>4;
-            if (tiporeg==0)
-                aux=valor;
-            if (tiporeg==1){
-                aux=TablaRegistros[op1&0x0F]&0x000000FF+valor&0x000000FF;
-                aux+=TablaRegistros[op1&0x0F]&0xFFFFFF00;
-            }
-            if (tiporeg==2){
-                aux=TablaRegistros[op1&0x0F]&0x0000FF00+(valor&0x000000FF)<<8;
-                aux+=TablaRegistros[op1&0x0F]&0xFFFF00FF;
-            }
-            if (tiporeg==3){
-                aux=TablaRegistros[op1&0x0F]&0x0000FFFF+valor&0x000FFFF;
-                aux+=TablaRegistros[op1&0x0F]&0xFFFF0000;
-            }
-            TablaRegistros[op1&0x0F]=aux;
+            nz=TablaMemoria[TablaDeDatos[1].pos+op1&0x00FFFF];
         }
+        else{
+            TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[(op1&0x0F0000)>>16]+op1&0x00FFFF]+=valor;
+            nz=TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[(op1&0x0F0000)>>16]+op1&0x00FFFF];
+        }
+    }else{
+        tiporeg=op1>>4;
+        if (tiporeg==0){
+            aux=TablaRegistros[op1&0x0F]+valor;
+            nz=aux;
+        }
+        if (tiporeg==1){
+            aux=TablaRegistros[op1&0x0F]&0x000000FF+valor&0x000000FF;
+            nz=aux;
+            aux+=TablaRegistros[op1&0x0F]&0xFFFFFF00;
+        }
+        if (tiporeg==2){
+            aux=TablaRegistros[op1&0x0F]&0x0000FF00+(valor&0x000000FF)<<8;
+            nz=(TablaRegistros[op1&0x0F]&0x0000FF00)>>8+(valor&0x000000FF);
+            aux+=TablaRegistros[op1&0x0F]&0xFFFF00FF;
+        }
+        if (tiporeg==3){
+            aux=TablaRegistros[op1&0x0F]&0x0000FFFF+valor&0x000FFFF;
+            nz=aux;
+            aux+=TablaRegistros[op1&0x0F]&0xFFFF0000;
+        }
+        TablaRegistros[op1&0x0F]=aux;
+    }
+    Ultima_operacion(TablaRegistros,nz);
 }
 void SUB(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
-char tiporeg;
-    long int aux=0x00000000;
+    char tiporeg;
+    long int aux=0x00000000,nz=0;
     if (top1==0){
-        if (op1&0x00FF0000==0)
+        if (op1&0x00FF0000==0){
             TablaMemoria[TablaDeDatos[1].pos+op1&0x00FFFF]-=valor;
-        else
-            TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[(op1&0x0F0000)>>16]+op1&0x00FFFF]-=valor;
+            nz=TablaMemoria[TablaDeDatos[1].pos+op1&0x00FFFF];
         }else{
+            TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[(op1&0x0F0000)>>16]+op1&0x00FFFF]-=valor;
+            nz=TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[(op1&0x0F0000)>>16]+op1&0x00FFFF];
+        }
+    }else{
             tiporeg=op1>>4;
-            if (tiporeg==0)
-                aux=valor;
+            if (tiporeg==0){
+                aux=TablaRegistros[op1&0x0F]-valor;
+                nz=aux;
+            }
             if (tiporeg==1){
                 aux=TablaRegistros[op1&0x0F]&0x000000FF-valor&0x000000FF;
+                nz=aux;
                 aux+=TablaRegistros[op1&0x0F]&0xFFFFFF00;
             }
             if (tiporeg==2){
                 aux=TablaRegistros[op1&0x0F]&0x0000FF00-(valor&0x000000FF)<<8;
+                nz=(TablaRegistros[op1&0x0F]&0x0000FF00)>>8-(valor&0x000000FF);
                 aux+=TablaRegistros[op1&0x0F]&0xFFFF00FF;
             }
             if (tiporeg==3){
                 aux=TablaRegistros[op1&0x0F]&0x0000FFFF-valor&0x000FFFF;
+                nz=aux;
                 aux+=TablaRegistros[op1&0x0F]&0xFFFF0000;
             }
             TablaRegistros[op1&0x0F]=aux;
         }
+    Ultima_operacion(TablaRegistros,nz);
 }
 void CMP(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
     char tiporeg;
@@ -141,22 +160,19 @@ void CMP(long int op1,char top1,long int valor2,char *TablaMemoria,long int Tabl
             tiporeg=op1>>4;
             if (tiporeg==0)
                 valor=TablaRegistros[op1&0x0F];
-            if (tiporeg==1){
-                TablaRegistros[op1&0x0F]=TablaRegistros[op1&0x0F]&0xFFFFFF00-valor&0x000000FF;
-            }
-            if (tiporeg==2){
-                TablaRegistros[op1&0x0F]=TablaRegistros[op1&0x0F]&0xFFFF00FF-(valor&0x000000FF)<<8;
-            }
-            if (tiporeg==3){
-                TablaRegistros[op1&0x0F]=TablaRegistros[op1&0x0F]&0xFFFF0000-valor&0x000FFFF;
-            }
+            if (tiporeg==1)
+                valor=TablaRegistros[op1&0x0F]&0x000000FF;
+            if (tiporeg==2)
+                valor=(TablaRegistros[op1&0x0F]&0x0000FF00)>>8;
+            if (tiporeg==3)
+                valor=TablaRegistros[op1&0x0F]&0x0000FFFF;
         }
-
+    Ultima_operacion(TablaRegistros,valor-valor2);
 }
-void Ultima_operacion(long int TablaRegistros[],int n,int z){
+void Ultima_operacion(long int TablaRegistros[],long int nz){
     TablaRegistros[8]=0;// seteo el cc en 0 por si las dudas
-    if (z==1)
+    if (nz==0)
         TablaRegistros[8]=0x40000000; //segundo bit mas significativo en 1 por ser una operacion que dio 0
-    if (n==1)
+    else
         TablaRegistros[8]=0x80000000;  //primer bit mas significativo en 1 por ser una operacion que dio <0
 }
