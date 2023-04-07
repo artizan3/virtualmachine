@@ -4,33 +4,21 @@
 	<ActiveTarget name="Debug" />
 	<File name="funciones.h" open="1" top="1" tabpos="2" split="0" active="1" splitpos="0" zoom_1="4" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2128" topLine="13" />
+			<Cursor1 position="25427" topLine="46" />
 		</Cursor>
 		<Folding>
-			<Collapse line="43" />
-			<Collapse line="57" />
-			<Collapse line="83" />
-			<Collapse line="114" />
-			<Collapse line="150" />
-			<Collapse line="187" />
-			<Collapse line="211" />
-			<Collapse line="248" />
-			<Collapse line="298" />
-			<Collapse line="319" />
-			<Collapse line="362" />
-			<Collapse line="405" />
-			<Collapse line="446" />
+			<Collapse line="85" />
+			<Collapse line="116" />
+			<Collapse line="152" />
+			<Collapse line="189" />
+			<Collapse line="213" />
+			<Collapse line="250" />
+			<Collapse line="300" />
+			<Collapse line="321" />
+			<Collapse line="364" />
+			<Collapse line="407" />
+			<Collapse line="447" />
 			<Collapse line="487" />
-			<Collapse line="529" />
-			<Collapse line="532" />
-			<Collapse line="536" />
-			<Collapse line="540" />
-			<Collapse line="544" />
-			<Collapse line="548" />
-			<Collapse line="552" />
-			<Collapse line="556" />
-			<Collapse line="560" />
-			<Collapse line="563" />
 			<Collapse line="568" />
 		</Folding>
 	</File>

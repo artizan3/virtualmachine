@@ -33,8 +33,10 @@ void LDL(long int valor,long int TablaRegistros[]);
 void RND(long int valor,long int TablaRegistros[]);
 Func_1op_tipo2 *tipo2[]={0,JMP,JZ,JP,JN,JNZ,JNP,JNN,LDL,LDH,RND,0};
 
-typedef void Func_1op_tipo1(long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
-Func_1op_tipo1 *TIPO1[]={/*SYS,0,0,0,0,0,0,0,0,0,0,NOT*/};
+typedef void Func_1op_tipo1(long int op,char top,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
+void NOT(long int op,char top,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
+void SYS(long int op,char top,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
+Func_1op_tipo1 *TIPO1[]={SYS,0,0,0,0,0,0,0,0,0,0,NOT};
 
 
 long int Operando2(long int op2,char top2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
@@ -422,7 +424,6 @@ void AND(long int op1,char top1,long int valor2,char *TablaMemoria,long int Tabl
         tiporeg=op1>>4;
         if (tiporeg==0){
             aux=(TablaRegistros[(op1&0x0F)])&(valor2);
-            TablaRegistros[(op1&0x0F)]=0;
             nz=aux;
         }
         if (tiporeg==1){
@@ -463,7 +464,6 @@ char tiporeg;
         tiporeg=op1>>4;
         if (tiporeg==0){
             aux=(TablaRegistros[(op1&0x0F)])|(valor2);
-            TablaRegistros[(op1&0x0F)]=0;
             nz=aux;
         }
         if (tiporeg==1){
@@ -504,7 +504,6 @@ char tiporeg;
         tiporeg=op1>>4;
         if (tiporeg==0){
             aux=(TablaRegistros[(op1&0x0F)])^(valor2);
-            TablaRegistros[(op1&0x0F)]=0;
             nz=aux;
         }
         if (tiporeg==1){
@@ -527,6 +526,8 @@ char tiporeg;
     Ultima_operacion(TablaRegistros,nz);//no se si opera asi, por si las dudas lo dejo en stand by.
 }
 
+void SYS(long int op,char top,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
+}//implementar sys.
 void JMP(long int valor,long int TablaRegistros[]){
     TablaRegistros[5]=valor;
 }
@@ -564,6 +565,37 @@ void LDL(long int valor,long int TablaRegistros[]){
 void RND(long int valor,long int TablaRegistros[]){
     srand(time(NULL));
     TablaRegistros[9]=rand()%valor;
+}
+void NOT(long int op,char top,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
+long int aux=0,tiporeg,nz=0;
+    if (top==0){
+        long int valorm=Valor_mem(op,TablaMemoria,TablaRegistros,TablaDeDatos);
+        nz=!valorm;
+        MOV(op,top,valorm,TablaMemoria,TablaRegistros,TablaDeDatos);
+    }else{
+        tiporeg=op>>4;
+        if (tiporeg==0){
+            aux=!(TablaRegistros[(op&0x0F)]);
+            nz=aux;
+        }
+        if (tiporeg==1){
+            aux=(!(TablaRegistros[(op&0x0F)]&0x000000FF)&0x000000FF);
+            nz=aux;
+            aux+=(TablaRegistros[(op&0x0F)]&0xFFFFFF00);
+        }
+        if (tiporeg==2){
+            aux=(!(TablaRegistros[(op&0x0F)]&0x0000FF00)&0x0000FF00);
+            nz=aux>>8;
+            aux+=(TablaRegistros[(op&0x0F)]&0xFFFF00FF);
+        }
+        if (tiporeg==3){
+            aux=(!(TablaRegistros[(op&0x0F)]&0x0000FFFF)&0x0000FFFF);
+            nz=aux;
+            aux+=(TablaRegistros[(op&0x0F)]&0xFFFF0000);
+        }
+        TablaRegistros[(op&0x0F)]=aux;
+    }
+    Ultima_operacion(TablaRegistros,nz);
 }
 
 void Ultima_operacion(long int TablaRegistros[],long int nz){
