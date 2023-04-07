@@ -12,8 +12,10 @@ void SUB(long int op1,char top1,long int valor,char *TablaMemoria,long int Tabla
 void CMP(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 void SHL(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 void SHR(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
+void AND(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 
-Funciones2op *funciones[]={MOV,ADD,SUB,/*SWAP,MUL,DIV,*/CMP,SHL,SHR/*,AND,OR,XOR*/};
+Funciones2op *funciones[]={MOV,ADD,SUB,/*SWAP,MUL,DIV,*/CMP,SHL,SHR,AND/*,OR,XOR*/};
+// AND OR XOR, afectan al registro CC, pero no se de q forma lo afecta?????
 
 long int Operando2(long int op2,char top2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 void Ultima_operacion(long int TablaRegistros[],long int nz);
@@ -103,7 +105,7 @@ void ADD(long int op1,char top1,long int valor,char *TablaMemoria,long int Tabla
         }
         if (tiporeg==2){
             aux=(TablaRegistros[(op1&0x0F)]&0x0000FF00)+((valor&0x000000FF)<<8);
-            nz=((TablaRegistros[(op1&0x0F)]&0x0000FF00)>>8)+(valor&0x000000FF);
+            nz=aux>>8;
             aux+=(TablaRegistros[(op1&0x0F)]&0xFFFF00FF);
         }
         if (tiporeg==3){
@@ -139,7 +141,7 @@ void SUB(long int op1,char top1,long int valor,char *TablaMemoria,long int Tabla
             }
             if (tiporeg==2){
                 aux=(TablaRegistros[(op1&0x0F)]&0x0000FF00)-((valor&0x000000FF)<<8);
-                nz=((TablaRegistros[(op1&0x0F)]&0x0000FF00)>>8)-(valor&0x000000FF);
+                nz=aux>>8;
                 aux+=(TablaRegistros[(op1&0x0F)]&0xFFFF00FF);
             }
             if (tiporeg==3){
@@ -234,8 +236,45 @@ void SHR(long int op1,char top1,long int valor2,char *TablaMemoria,long int Tabl
         }
         TablaRegistros[(op1&0x0F)]+=aux;
 }
-
-void Ultima_operacion(long int TablaRegistros[],long int nz){
+void AND(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
+    char tiporeg;
+    long int aux=0,nz=0;
+    if (top1==0){
+        if ((op1&0x00FF0000)==0){
+            TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)]=(TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)])&(valor2);
+            nz=TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)];
+        }
+        else{
+            TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x0F0000)>>16)]+(op1&0x00FFFF)]=(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x0F0000)>>16)]+(op1&0x00FFFF)])&(valor2);
+            nz=TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x0F0000)>>16)]+(op1&0x00FFFF)];
+        }
+    }else{
+        tiporeg=op1>>4;
+        if (tiporeg==0){
+            aux=(TablaRegistros[(op1&0x0F)])&(valor2);
+            TablaRegistros[(op1&0x0F)]=0;
+            nz=aux;
+        }
+        if (tiporeg==1){
+            aux=(TablaRegistros[(op1&0x0F)]&0x000000FF)&(valor2&0x000000FF);
+            nz=aux;
+            aux+=(TablaRegistros[(op1&0x0F)]&0xFFFFFF00);
+        }
+        if (tiporeg==2){
+            aux=(TablaRegistros[(op1&0x0F)]&0x0000FF00)&((valor2&0x000000FF)<<8);
+            nz=aux>>8;
+            aux+=(TablaRegistros[(op1&0x0F)]&0xFFFF00FF);
+        }
+        if (tiporeg==3){
+            aux=(TablaRegistros[(op1&0x0F)]&0x0000FFFF)&(valor2&0x000FFFF);
+            nz=aux;
+            aux+=(TablaRegistros[(op1&0x0F)]&0xFFFF0000);
+        }
+        TablaRegistros[(op1&0x0F)]=aux;
+    }
+    //Ultima_operacion(TablaRegistros,nz);//no se si opera asi, por si las dudas lo dejo en stand by.
+}
+void Ultima_operacion(long int TablaRegistros[],long int nz){//efectuo los cambios en el CC.
     TablaRegistros[8]=0;// seteo el cc en 0 por si las dudas
     if (nz==0)
         TablaRegistros[8]=0x40000000; //segundo bit mas significativo en 1 por ser una operacion que dio 0
