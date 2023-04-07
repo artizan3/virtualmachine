@@ -11,6 +11,7 @@ void ADD(long int op1,char top1,long int valor,char *TablaMemoria,long int Tabla
 void SUB(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 void SWAP(long int op1,long int op2,char top1,char top2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);// terminarla
 void MUL(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
+void DIV(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 void CMP(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 void SHL(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 void SHR(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
@@ -18,7 +19,7 @@ void AND(long int op1,char top1,long int valor2,char *TablaMemoria,long int Tabl
 void OR(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 void XOR(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 
-Funciones2op *funciones[]={MOV,ADD,SUB,0,MUL/*,DIV,*/CMP,SHL,SHR,AND,OR,XOR};
+Funciones2op *funciones[]={MOV,ADD,SUB,0,MUL,DIV,CMP,SHL,SHR,AND,OR,XOR};
 // AND OR XOR, afectan al registro CC, pero no se de q forma lo afecta?????
 
 long int Operando2(long int op2,char top2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
@@ -244,9 +245,10 @@ void DIV(long int op1,char top1,long int valor,char *TablaMemoria,long int Tabla
                 aux+=(TablaRegistros[(op1&0x0F)]&0xFFFFFF00);
             }
             if (tiporeg==2){
-                TablaRegistros[9]=((TablaRegistros[(op1&0x0F)]&0x0000FF00)>>8)%((valor&0x000000FF);
-                aux=(TablaRegistros[(op1&0x0F)]&0x0000FF00)/((valor&0x000000FF)<<8);
-                nz=((TablaRegistros[(op1&0x0F)]&0x0000FF00)>>8)/(valor&0x000000FF);
+                TablaRegistros[9]=((TablaRegistros[(op1&0x0F)]&0x0000FF00)>>8)%(valor&0x000000FF);
+                aux=((TablaRegistros[(op1&0x0F)]&0x0000FF00)>>8)/((valor&0x000000FF));
+                aux=(aux<<8)&0x0000FF00;
+                nz=aux;
                 aux+=(TablaRegistros[(op1&0x0F)]&0xFFFF00FF);
             }
             if (tiporeg==3){
@@ -462,3 +464,4 @@ void Ultima_operacion(long int TablaRegistros[],long int nz){
     else
         TablaRegistros[8]=0x80000000;  //primer bit mas significativo en 1 por ser una operacion que dio <0
 }
+
