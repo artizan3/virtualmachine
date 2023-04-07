@@ -51,7 +51,7 @@ void Inicia_memoria(char *TablaMemoria,TDD TablaDeDatos[]){
 void Lectura(char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
     char top1,top2,operacion;
     short int cant;
-    long int op1=0x00000000,op2=0x00000000;
+    long int op1=0,op2=0;
     int corte;
     while (TablaRegistros[5]!=TablaDeDatos[1].pos && cant!=0)
     {
@@ -67,20 +67,23 @@ void Lectura(char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
         if (cant==2){
                 for (int i=1;i<=corte;i++){
                     TablaRegistros[5]++;
-                    op1=TablaMemoria[TablaRegistros[5]];
-                    op1<<(((top1^0x3)-i)*8);
+                    op1+=TablaMemoria[TablaRegistros[5]];
+                    if (i!=corte)
+                        op1=op1<<8;
                 }
                 corte=top2^0x3;//le asigno el opuesto del tipo2 el cual representa la longitud
                 for (int i=1;i<=corte;i++){
                     TablaRegistros[5]++;
-                    op2=TablaMemoria[TablaRegistros[5]];
-                    op2<<(((top1^0x3)-i)*8);
+                    op2+=TablaMemoria[TablaRegistros[5]];
+                    if (i!=corte)
+                        op2=op2<<8;
                 }
         }else{
             for (int i=1;i<=corte;i++){
                     TablaRegistros[5]++;
-                    op1=TablaMemoria[TablaRegistros[5]];
-                    op1<<(((top1^0x3)-i)*8);
+                    op1+=TablaMemoria[TablaRegistros[5]];
+                    if (i!=corte)
+                        op1=op1<<8;
                 }
         }
         //printf("%X %X",op1,op2);//wirteo a ver si se guardaron vien los operadores.
