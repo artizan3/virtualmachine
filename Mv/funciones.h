@@ -538,7 +538,7 @@ char tiporeg;
 }
 
 void SYS(long int op,char top,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
-    long int valor,pos;
+    long int valor,pos,tot;
     int rep,byt,tipo;
     if (top==0)
         valor=Valor_mem(op,TablaMemoria,TablaRegistros,TablaDeDatos);
@@ -562,9 +562,24 @@ void SYS(long int op,char top,char *TablaMemoria,long int TablaRegistros[],TDD T
     }
     //lee por pantalla
     if (valor==1){
-
+        for (int i=1;i<=rep;i++){
+            Leer(tipo,&tot);
+            for (int j=1;j<=byt;j++){
+                TablaMemoria[pos]=(tot>>(byt-j)*8)&0x000000FF;
+                pos++;
+            }
+        }
     }
-
+}
+void Leer(int tipo,long int *tot){
+    if (tipo==1)
+        scanf("%d",tot);
+    if (tipo==2)
+        scanf("%c",tot);
+    if (tipo==4)
+        scanf("%o",tot);
+    if (tipo==8)
+        scanf("%x",tot);
 }
 void Escribe(char valor,int tipo){
     if (tipo==1)
@@ -575,8 +590,11 @@ void Escribe(char valor,int tipo){
         printf("%o ",valor);
     if (tipo==8)
         printf("%X ",valor);
-    else{}
-        //imprimir todo a la vez
+    if (tipo==0x000F)
+        //falta imprimir todo a la vez en esta solucion no imprime todos los byte en una linea, va byte a byte x linea
+        printf("%c %X %o %d ",valor,valor,valor,valor);
+
+
 }
 void JMP(long int valor,long int TablaRegistros[]){
     TablaRegistros[5]=valor;
@@ -653,7 +671,7 @@ void Ultima_operacion(long int TablaRegistros[],long int nz){
     TablaRegistros[8]=0;// seteo el cc en 0 por si las dudas
     if (nz==0)
         TablaRegistros[8]=0x40000000; //segundo bit mas significativo en 1 por ser una operacion que dio 0
-    else
+    if (nz<0)
         TablaRegistros[8]=0x80000000;  //primer bit mas significativo en 1 por ser una operacion que dio <0
 }
 long int Valor_mem(long int op,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
@@ -666,3 +684,4 @@ long int Valor_mem(long int op,char *TablaMemoria,long int TablaRegistros[],TDD 
     }
     return resultado;
 }
+

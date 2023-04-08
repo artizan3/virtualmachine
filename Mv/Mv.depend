@@ -1,11 +1,9 @@
 # depslib dependency file v1.0
-1680902304 source:c:\users\bruno trinitario\desktop\mv\main.c
+1680985635 source:c:\users\bruno trinitario\desktop\mv\main.c
 	<stdio.h>
 	<stdlib.h>
 	"funciones.h"
 
-1680542986 c:\users\bruno trinitario\desktop\mv\operaciones.h
-
-1680907776 c:\users\bruno trinitario\desktop\mv\funciones.h
+1680985757 c:\users\bruno trinitario\desktop\mv\funciones.h
 	<time.h>
 
