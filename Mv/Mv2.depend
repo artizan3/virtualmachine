@@ -1,0 +1,9 @@
+# depslib dependency file v1.0
+1680978084 source:c:\users\bruno trinitario\desktop\mv2\main.c
+	<stdio.h>
+	<stdlib.h>
+	"funciones.h"
+
+1680978095 c:\users\bruno trinitario\desktop\mv2\funciones.h
+	<time.h>
+

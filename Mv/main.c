@@ -26,7 +26,7 @@ void Inicia_registro(long int TablaRegistros[]){
 void Inicia_memoria(char *TablaMemoria,TDD TablaDeDatos[]){
 
     char lec;
-    FILE *arch=fopen("fibo.vmx","rb");
+    FILE *arch=fopen("prueba2.vmx","rb");
     int i=0;
 
     TablaDeDatos[0].pos=0;
@@ -51,10 +51,12 @@ void Inicia_memoria(char *TablaMemoria,TDD TablaDeDatos[]){
 void Lectura(char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
     char top1,top2,operacion;
     short int cant;
-    long int op1=0,op2=0;
+    long int op1,op2;
     int corte;
     while (TablaRegistros[5]!=TablaDeDatos[1].pos && cant!=0)
     {
+       op1=0;
+       op2=0;
             /**
             mientras que ip no haya llegado al FINAL. se ejecuta el codigo.
             teoricamente lo inicializamos y lo terminamos aca, pero deberiamos ir chequeando como va avanzando todo
@@ -86,7 +88,7 @@ void Lectura(char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
                         op1=op1<<8;
                 }
         }
-        //printf("%X %X",op1,op2);//wirteo a ver si se guardaron vien los operadores.
+        //printf("%d %d %d %X %X \n",operacion,top1,top2,op1,op2);//wirteo a ver si se guardaron vien los operadores.
 
         TablaRegistros[5]++;// le sumo uno mas al ip antes de que se ejecute la operacion.
         Pre_Funcion(cant,op1,op2,top1,top2,operacion,TablaMemoria,TablaRegistros,TablaDeDatos);//con esto arracamos la parte de hacer la funcion
@@ -94,7 +96,7 @@ void Lectura(char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
 }
 
 void Cant_op(char instruccion,char *top1,char *top2,short int *cant){
-    *top1=instruccion>>6;        //haciendo el corrimiento me quedaria 00XX donde XX es el valor del operando
+    *top1=(instruccion>>6)&0x3;//haciendo el corrimiento me quedaria 00XX donde XX es el valor del operando
     *top2=(instruccion>>4)&0x3;//haciendo la operacion tambien quedaria 00XX.
     if (*top2==3)
         *cant=1;

@@ -1,5 +1,4 @@
 #include<time.h>
-//funciones de 1 operando SYS NOT
 typedef struct{
 char pos;
 int tamano;
@@ -36,7 +35,7 @@ Func_1op_tipo2 *tipo2[]={0,JMP,JZ,JP,JN,JNZ,JNP,JNN,LDL,LDH,RND,0};
 typedef void Func_1op_tipo1(long int op,char top,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 void NOT(long int op,char top,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
 void SYS(long int op,char top,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
-Func_1op_tipo1 *TIPO1[]={SYS,0,0,0,0,0,0,0,0,0,0,NOT};
+Func_1op_tipo1 *tipo1[]={SYS,0,0,0,0,0,0,0,0,0,0,NOT};
 
 
 long int Operando2(long int op2,char top2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
@@ -53,7 +52,10 @@ long int valor;
             SWAP(op1,op2,top1,top2,TablaMemoria,TablaRegistros,TablaDeDatos);
     }else{
         valor=Operando2(op1,top1,TablaMemoria,TablaRegistros,TablaDeDatos);
-//        funciones1[operacion](valor);
+        if (operacion<=10 && operacion>=1)
+            tipo2[operacion](valor,TablaRegistros);
+        else
+            tipo1[operacion](op1,top1,TablaMemoria,TablaRegistros,TablaDeDatos);
     }
 }
 
@@ -61,22 +63,28 @@ long int Operando2(long int op2,char top2,char *TablaMemoria,long int TablaRegis
  char tiporeg;
  long int resultado=0;
     if (top2==2){
-        tiporeg=op2>>4;
-        if (tiporeg==3)
-            resultado=(TablaRegistros[(op2&0x0F)]&0x0000FFFF);
-        if (tiporeg==2)
-            resultado=((TablaRegistros[(op2&0x0F)]&0x0000FF00)>>8);
-        if (tiporeg==1)
-            resultado=(TablaRegistros[(op2&0x0F)]&0x000000FF);
-        if (tiporeg==0)
-            resultado=TablaRegistros[(op2&0x0F)];
+        if (op2==1)
+            resultado=TablaDeDatos[1].pos;
+        else{
+            tiporeg=op2>>4;
+            if (tiporeg==3)
+                resultado=(TablaRegistros[(op2&0x0F)]&0x0000FFFF);
+            if (tiporeg==2)
+                resultado=((TablaRegistros[(op2&0x0F)]&0x0000FF00)>>8);
+            if (tiporeg==1)
+                resultado=(TablaRegistros[(op2&0x0F)]&0x000000FF);
+            if (tiporeg==0)
+                resultado=TablaRegistros[(op2&0x0F)];
+        }
     }
     if (top2==0){
-        for (int i=1;i<=4;i++){
-            resultado+=(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op2&0x000F0000)>>16)]+(op2&0x0000FFFF)+i-1]);
-            if (i!=4)
-                resultado=resultado<<8;
-        }
+       resultado=Valor_mem(op2,TablaMemoria,TablaRegistros,TablaDeDatos);
+        //for (int i=1;i<=4;i++){
+
+            //resultado+=//(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op2&0x000F0000)>>16)]+(op2&0x0000FFFF)+i-1]);
+            //if (i!=4)
+            //    resultado=resultado<<8;
+       // }
     }
     if (top2==1)
         resultado=op2;
@@ -88,7 +96,10 @@ char tiporeg;
 long int mascara=0xFF000000;
     if (top1==0){
             for(int i=0;i<=3;i++){
-                TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]=(((valor)&(mascara>>i*8))>>(3-i)*8);
+                if (((op1&0x000F0000)>>16)==1)
+                    TablaMemoria[TablaDeDatos[1].pos+(op1&0x0000FFFF)+i]=(((valor)&(mascara>>i*8))>>(3-i)*8);
+                else
+                    TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]=(((valor)&(mascara>>i*8))>>(3-i)*8);
             }
            // en teoria esto es lo que haria el for=
            // TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+3]=(valor&0x000000FF)>>8*0;
@@ -527,7 +538,46 @@ char tiporeg;
 }
 
 void SYS(long int op,char top,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
-}//implementar sys.
+    long int valor,pos;
+    int rep,byt,tipo;
+    if (top==0)
+        valor=Valor_mem(op,TablaMemoria,TablaRegistros,TablaDeDatos);
+    if (top==2)
+        valor=Operando2(op,top,TablaMemoria,TablaRegistros,TablaDeDatos);
+    else
+        valor=op;
+    pos=TablaRegistros[13];//EDX
+    rep=TablaRegistros[12]&0x000000FF;//CL
+    byt=(TablaRegistros[12]&0x0000FF00)>>8;//CH
+    tipo=TablaRegistros[10]&0x000000FF;//AL
+    //escribe por pantalla
+    if (valor==2){
+        for(int i=1;i<=rep;i++){
+            for (int j=1;j<=byt;j++){
+                Escribe(TablaMemoria[pos+j-1],tipo);
+            }
+            printf("\n");
+        pos++;
+        }
+    }
+    //lee por pantalla
+    if (valor==1){
+
+    }
+
+}
+void Escribe(char valor,int tipo){
+    if (tipo==1)
+        printf("%d ",valor);
+    if (tipo==2)
+        printf("%c ",valor);
+    if (tipo==4)
+        printf("%o ",valor);
+    if (tipo==8)
+        printf("%X ",valor);
+    else{}
+        //imprimir todo a la vez
+}
 void JMP(long int valor,long int TablaRegistros[]){
     TablaRegistros[5]=valor;
 }
@@ -609,8 +659,10 @@ void Ultima_operacion(long int TablaRegistros[],long int nz){
 long int Valor_mem(long int op,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
     long int resultado=0;
     for (int i=0;i<=3;i++){
-        resultado+=(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op&0x000F0000)>>16)]+(op&0x0000FFFF)+i])<<(3-i);
+        if (((op&0x000F0000)>>16)==1)
+            resultado+=(TablaMemoria[TablaDeDatos[1].pos+(op&0x0000FFFF)+i])<<(3-i);
+        else
+            resultado+=(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op&0x000F0000)>>16)]+(op&0x0000FFFF)+i])<<(3-i);
     }
     return resultado;
 }
-
