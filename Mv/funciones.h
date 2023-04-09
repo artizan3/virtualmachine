@@ -287,6 +287,9 @@ void CMP(long int op1,char top1,long int valor2,char *TablaMemoria,long int Tabl
         if (tiporeg==3)
             valor=(TablaRegistros[(op1&0x0F)]&0x0000FFFF);
     }
+   // printf("%X %X %X %X\n",TablaMemoria[TablaDeDatos[1].pos+10],TablaMemoria[TablaDeDatos[1].pos+11],TablaMemoria[TablaDeDatos[1].pos+12],TablaMemoria[TablaDeDatos[1].pos+13]);
+   // printf("%X %X %X %X\n",TablaMemoria[TablaDeDatos[1].pos+20],TablaMemoria[TablaDeDatos[1].pos+21],TablaMemoria[TablaDeDatos[1].pos+22],TablaMemoria[TablaDeDatos[1].pos+23]);
+   // printf("%d %d\n",valor,valor2);
     Ultima_operacion(TablaRegistros,valor-valor2);
 }
 void SHL(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
@@ -483,7 +486,7 @@ void SYS(long int op,char top,char *TablaMemoria,long int TablaRegistros[],TDD T
         for(int i=1;i<=rep;i++){
             tot=0;
             for (int j=1;j<=byt;j++){
-                tot+=TablaMemoria[pos+j-1];
+                tot+=(TablaMemoria[pos+j-1])&0x000000FF;
                 if (j!=byt)
                     tot=tot<<8;
             }
