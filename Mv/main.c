@@ -13,8 +13,8 @@ int main()
 
     Inicia_registro(TablaRegistros);//inicializo la tabla de registros.
     Inicia_memoria(TablaMemoria,TablaDeDatos);//inicio la tabla de memoria y la de datos.
-    Dissasembler_mostrar(TablaMemoria,TablaRegistros,TablaDeDatos);
-    //Lectura(TablaMemoria,TablaRegistros,TablaDeDatos);
+    //Dissasembler_mostrar(TablaMemoria,TablaRegistros,TablaDeDatos);//solo se debe ejecutar si el usuario lo pide
+    Lectura(TablaMemoria,TablaRegistros,TablaDeDatos);
 }
 
 void Inicia_registro(long int TablaRegistros[]){
@@ -90,48 +90,10 @@ void Cant_op(char instruccion,char *top1,char *top2,short int *cant){
     *top2=(instruccion>>4)&0x3;//haciendo la operacion tambien quedaria 00XX.
     if (*top1==3)
         *cant=0;
-    if (*top2==3)
-        *cant=1;
     else
-        *cant=2;
+        if (*top2==3)
+            *cant=1;
+        else
+            *cant=2;
 }
-void Dissasembler_mostrar(long int TablaRegistros[],char *TablaMemoria,TDD TablaDeDatos[]){
-int corte;
-char top1,top2,operacion;
-short int cant;
-long int op1,op2,contador=TablaRegistros[5];
-    printf("%d",contador);
-    while (contador!=TablaDeDatos[1].pos){
-        operacion=TablaMemoria[contador]&0x0F;
-        Muestra_mem(contador);
-        Muestra_byte((TablaMemoria[contador])&0x0F);
-        Cant_op(TablaMemoria[contador],&top1,&top2,&cant);
-        corte=top1^0x3;
-        if (cant==2){
-            for (int i=1;i<=corte;i++){
-                contador++;
-                Muestra_byte(TablaMemoria[contador]);
-                op1+=(TablaMemoria[contador])&0x000000FF;
-                if (i!=corte)
-                    op1=op1<<8;
-            }
-            corte=top2^0x3;//le asigno el opuesto del tipo2 el cual representa la longitud
-            for (int i=1;i<=corte;i++){
-                contador++;
-                Muestra_byte(TablaMemoria[contador]);
-                op2+=(TablaMemoria[contador])&0x000000FF;
-                if (i!=corte)
-                    op2=op2<<8;
-            }
-        }else{
-            for (int i=1;i<=corte;i++){
-                contador++;
-                Muestra_byte(TablaMemoria[contador]);
-                op1+=(TablaMemoria[contador])&0x000000FF;
-                if (i!=corte)
-                    op1=op1<<8;
-            }
-        }
-        Muestra_dissasembler(cant,op1,op2,top1,top2,operacion,TablaMemoria,TablaRegistros,TablaDeDatos);
-    }
-}
+
