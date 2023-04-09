@@ -79,15 +79,9 @@ long int Operando2(long int op2,char top2,char *TablaMemoria,long int TablaRegis
     }
     if (top2==0){
        resultado=Valor_mem(op2,TablaMemoria,TablaRegistros,TablaDeDatos);
-        //for (int i=1;i<=4;i++){
-
-            //resultado+=//(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op2&0x000F0000)>>16)]+(op2&0x0000FFFF)+i-1]);
-            //if (i!=4)
-            //    resultado=resultado<<8;
-       // }
     }
     if (top2==1)
-        resultado=op2;
+        resultado=(op2);
     return resultado;
 }// lo que hace la funcion es ya tomar directamente el valor de el operando 2 y dejarlo listo para oprerar (en caso de ser posible lo deja en los bytes menos significativos)
 
@@ -101,11 +95,6 @@ long int mascara=0xFF000000;
                 else
                     TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]=(((valor)&(mascara>>i*8))>>(3-i)*8);
             }
-           // en teoria esto es lo que haria el for=
-           // TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+3]=(valor&0x000000FF)>>8*0;
-           // TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+2]=(valor&0x0000FF00)>>8*1;
-           // TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+1]=(valor&0x00FF0000)>>8*2;
-           // TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)]=(valor&0xFF000000)>>3*8;
         }else{
             tiporeg=op1>>4;
             if (tiporeg==0)
@@ -133,9 +122,6 @@ void ADD(long int op1,char top1,long int valor,char *TablaMemoria,long int Tabla
         nz=valorm+valor;
         valorm=nz;
         MOV(op1,top1,valorm,TablaMemoria,TablaRegistros,TablaDeDatos);
-       // for(int i=0;i<=3;i++){
-       //     TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]+=(((valor)&(mascara>>i*8))>>(3-i)*8);
-       // }
     }else{
         tiporeg=op1>>4;
         if (tiporeg==0){
@@ -169,10 +155,6 @@ void SUB(long int op1,char top1,long int valor,char *TablaMemoria,long int Tabla
         nz=valorm-valor;
         valorm=nz;
         MOV(op1,top1,valorm,TablaMemoria,TablaRegistros,TablaDeDatos);
-        //for(int i=0;i<=3;i++){
-        //    TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]-=(((valor)&(mascara>>i*8))>>(3-i)*8);
-        //    nz+=(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i])<<(3-i);
-       // }
     }else{
         tiporeg=op1>>4;
         if (tiporeg==0){
@@ -202,21 +184,12 @@ void SWAP(long int op1,long int op2,char top1,char top2,char *TablaMemoria,long 
 long int aux,aux2;
     if (top1==top2){
         if (top1==0){
-           long int aux=Valor_mem(op1,TablaMemoria,TablaRegistros,TablaDeDatos);
-           long int aux2=Valor_mem(op2,TablaMemoria,TablaRegistros,TablaDeDatos);
-
-            //for (int i=0;i<=3;i++){
-            //    aux=TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i];
-            //    TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]=TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op2&0x000F0000)>>16)]+(op2&0x0000FFFF)+i];
-            //    TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op2&0x000F0000)>>16)]+(op2&0x0000FFFF)+i]=aux;
-            // }
-        // aux=TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)];
-        //  TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)]=TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op2&0x000F0000)>>16)]+(op2&0x0000FFFF)];
-        //  TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op2&0x000F0000)>>16)]+(op2&0x0000FFFF)]=aux;
+           aux=Valor_mem(op1,TablaMemoria,TablaRegistros,TablaDeDatos);
+           aux2=Valor_mem(op2,TablaMemoria,TablaRegistros,TablaDeDatos);
+          // printf("%d %d",aux,aux2);
         }else{
             aux=Operando2(op1,top1,TablaMemoria,TablaRegistros,TablaDeDatos);
             aux2=Operando2(op2,top2,TablaMemoria,TablaRegistros,TablaDeDatos);
-
         }
         MOV(op1,top1,aux2,TablaMemoria,TablaRegistros,TablaDeDatos);
         MOV(op2,top2,aux,TablaMemoria,TablaRegistros,TablaDeDatos);
@@ -230,10 +203,6 @@ void MUL(long int op1,char top1,long int valor,char *TablaMemoria,long int Tabla
         nz=valorm*valor;
         valorm=nz;
         MOV(op1,top1,valorm,TablaMemoria,TablaRegistros,TablaDeDatos);
-        //for(int i=0;i<=3;i++){
-        //    TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]*=(((valor)&(mascara>>i*8))>>(3-i)*8);
-        //    nz+=(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i])<<(3-i);
-        // }
     }else{
         tiporeg=op1>>4;
         if (tiporeg==0){
@@ -269,15 +238,6 @@ void DIV(long int op1,char top1,long int valor,char *TablaMemoria,long int Tabla
             nz=valorm/valor;
             valorm=nz;
             MOV(op1,top1,valorm,TablaMemoria,TablaRegistros,TablaDeDatos);
-            //if ((op1&0x00FF0000)==0){
-             //   TablaRegistros[9]=TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)]%valor;
-             //   TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)]/=valor;
-              //  nz=TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)]; //pos inicial DS mas offset de mem
-
-           // }else{
-                //TablaRegistros[9]=TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)]%valor;
-                //TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)]/=valor;
-                //nz=TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)]; //pos inicial DS mas offset mas direccion que se encutra en tabla de reg
         }else{
             tiporeg=op1>>4;
             if (tiporeg==0){
@@ -313,9 +273,6 @@ void CMP(long int op1,char top1,long int valor2,char *TablaMemoria,long int Tabl
     char tiporeg;
     long int valor;
     if (top1==0){
-      //  if ((op1&0x00FF0000)==0)
-      //      valor=TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)];
-      //  else
         valor=Valor_mem(op1,TablaMemoria,TablaRegistros,TablaDeDatos);
     }else{
         tiporeg=op1>>4;
@@ -328,6 +285,7 @@ void CMP(long int op1,char top1,long int valor2,char *TablaMemoria,long int Tabl
         if (tiporeg==3)
             valor=(TablaRegistros[(op1&0x0F)]&0x0000FFFF);
     }
+    //valor=(valor)&0x000001FF;//esto es una especie de propagacion "de signo", mejorar interpretacion.
     Ultima_operacion(TablaRegistros,valor-valor2);
 }
 void SHL(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
@@ -338,11 +296,6 @@ void SHL(long int op1,char top1,long int valor2,char *TablaMemoria,long int Tabl
         nz=valorm<<valor2;
         valorm=nz;
         MOV(op1,top1,valorm,TablaMemoria,TablaRegistros,TablaDeDatos);
-      //  if ((op1&0x00FF0000)==0)
-       //     TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)]=((TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)])<<valor2);
-     //   else
-          //  TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)]=((TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)]<<valor2));
-          //  nz=TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)];
         }else{
             tiporeg=op1>>4;
             if (tiporeg==0){
@@ -381,39 +334,34 @@ void SHR(long int op1,char top1,long int valor2,char *TablaMemoria,long int Tabl
         nz=valorm>>valor2;
         valorm=nz;
         MOV(op1,top1,valorm,TablaMemoria,TablaRegistros,TablaDeDatos);
-      //  if ((op1&0x00FF0000)==0)
-     //       TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)]=((TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)])>>valor2);
-      //  else
-       //     TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)]=((TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)]>>valor2));
-       //     nz=TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)];
-        }else{
-            tiporeg=op1>>4;
-            if (tiporeg==0){
-               aux=TablaRegistros[(op1&0x0F)]>>valor2;
-               nz=aux;
-               TablaRegistros[(op1&0x0F)]=0;
-            }
-            if (tiporeg==1){
-                aux=(TablaRegistros[(op1&0x0F)]&0x000000FF);
-                TablaRegistros[(op1&0x0F)]=TablaRegistros[(op1&0x0F)]&0xFFFFFF00;
-                aux=(aux>>valor2)&0x000000FF;
-                nz=aux;
-            }
-            if (tiporeg==2){
-                aux=((TablaRegistros[(op1&0x0F)]&0x0000FF00)>>8);
-                TablaRegistros[(op1&0x0F)]=TablaRegistros[(op1&0x0F)]&0xFFFF00FF;
-                aux=((aux>>valor2)&0x000000FF);
-                nz=aux;
-                aux=aux<<8;
-            }
-            if (tiporeg==3){
-                aux=(TablaRegistros[(op1&0x0F)]&0x0000FFFF);
-                TablaRegistros[(op1&0x0F)]=TablaRegistros[(op1&0x0F)]&0xFFFF0000;
-                aux=(aux>>valor2)&&0x0000FFFF;
-                nz=aux;
-            }
-        TablaRegistros[(op1&0x0F)]+=aux;
+    }else{
+        tiporeg=op1>>4;
+        if (tiporeg==0){
+            aux=TablaRegistros[(op1&0x0F)]>>valor2;
+            nz=aux;
+            TablaRegistros[(op1&0x0F)]=0;
         }
+        if (tiporeg==1){
+            aux=(TablaRegistros[(op1&0x0F)]&0x000000FF);
+            TablaRegistros[(op1&0x0F)]=TablaRegistros[(op1&0x0F)]&0xFFFFFF00;
+            aux=(aux>>valor2)&0x000000FF;
+            nz=aux;
+        }
+        if (tiporeg==2){
+            aux=((TablaRegistros[(op1&0x0F)]&0x0000FF00)>>8);
+            TablaRegistros[(op1&0x0F)]=TablaRegistros[(op1&0x0F)]&0xFFFF00FF;
+            aux=((aux>>valor2)&0x000000FF);
+            nz=aux;
+            aux=aux<<8;
+        }
+        if (tiporeg==3){
+            aux=(TablaRegistros[(op1&0x0F)]&0x0000FFFF);
+            TablaRegistros[(op1&0x0F)]=TablaRegistros[(op1&0x0F)]&0xFFFF0000;
+            aux=(aux>>valor2)&&0x0000FFFF;
+            nz=aux;
+        }
+        TablaRegistros[(op1&0x0F)]+=aux;
+    }
     Ultima_operacion(TablaRegistros,nz);
 }
 void AND(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
@@ -424,13 +372,6 @@ void AND(long int op1,char top1,long int valor2,char *TablaMemoria,long int Tabl
         nz=valorm&valor2;
         valorm=nz;
         MOV(op1,top1,valorm,TablaMemoria,TablaRegistros,TablaDeDatos);
-       // if ((op1&0x00FF0000)==0){
-           // TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)]=(TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)])&(valor2);
-          //  nz=TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)];
-       // }
-       // else{
-       //     TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)]=(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)])&(valor2);
-       //     nz=TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)];
     }else{
         tiporeg=op1>>4;
         if (tiporeg==0){
@@ -464,13 +405,6 @@ char tiporeg;
         nz=valorm|valor2;
         valorm=nz;
         MOV(op1,top1,valorm,TablaMemoria,TablaRegistros,TablaDeDatos);
-       // if ((op1&0x00FF0000)==0){
-           // TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)]=(TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)])|(valor2);
-          //  nz=TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)];
-       // }
-       // else{
-       //     TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)]=(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)])|(valor2);
-       //     nz=TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)];
     }else{
         tiporeg=op1>>4;
         if (tiporeg==0){
@@ -504,13 +438,6 @@ char tiporeg;
         nz=valorm^valor2;
         valorm=nz;
         MOV(op1,top1,valorm,TablaMemoria,TablaRegistros,TablaDeDatos);
-       // if ((op1&0x00FF0000)==0){
-           // TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)]=(TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)])^(valor2);
-          //  nz=TablaMemoria[TablaDeDatos[1].pos+(op1&0x00FFFF)];
-       // }
-       // else{
-       //     TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)]=(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)])^(valor2);
-       //     nz=TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)];
     }else{
         tiporeg=op1>>4;
         if (tiporeg==0){
@@ -553,9 +480,14 @@ void SYS(long int op,char top,char *TablaMemoria,long int TablaRegistros[],TDD T
     //escribe por pantalla
     if (valor==2){
         for(int i=1;i<=rep;i++){
+            tot=0;
             for (int j=1;j<=byt;j++){
-                Escribe(TablaMemoria[pos+j-1],tipo);
+                tot+=TablaMemoria[pos+j-1];
+                if (j!=byt)
+                    tot=tot<<8;
             }
+            //asumimos que CH es como mucho 4. existe la posibilidad de que sea mayor?
+            Escribe(tot,tipo);
             printf("\n");
         pos++;
         }
@@ -581,7 +513,7 @@ void Leer(int tipo,long int *tot){
     if (tipo==8)
         scanf("%x",tot);
 }
-void Escribe(char valor,int tipo){
+void Escribe(long int valor,int tipo){
     if (tipo==1)
         printf("%d ",valor);
     if (tipo==2)
@@ -678,9 +610,10 @@ long int Valor_mem(long int op,char *TablaMemoria,long int TablaRegistros[],TDD 
     long int resultado=0;
     for (int i=0;i<=3;i++){
         if (((op&0x000F0000)>>16)==1)
-            resultado+=(TablaMemoria[TablaDeDatos[1].pos+(op&0x0000FFFF)+i])<<(3-i);
+            resultado+=TablaMemoria[TablaDeDatos[1].pos+(op&0x0000FFFF)+i];
         else
-            resultado+=(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op&0x000F0000)>>16)]+(op&0x0000FFFF)+i])<<(3-i);
+            resultado+=(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op&0x000F0000)>>16)]+(op&0x0000FFFF)+i]);
+        resultado=resultado<<(3-i)*8;
     }
     return resultado;
 }
