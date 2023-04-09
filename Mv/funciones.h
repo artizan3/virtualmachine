@@ -82,18 +82,20 @@ long int Operando2(long int op2,char top2,char *TablaMemoria,long int TablaRegis
     }
     if (top2==1)
         resultado=(op2);
-    return resultado;
+    return (resultado);
 }// lo que hace la funcion es ya tomar directamente el valor de el operando 2 y dejarlo listo para oprerar (en caso de ser posible lo deja en los bytes menos significativos)
 
 void MOV(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
 char tiporeg;
-long int mascara=0xFF000000;
+//long int mascara=0xFF000000;
     if (top1==0){
             for(int i=0;i<=3;i++){
                 if (((op1&0x000F0000)>>16)==1)
-                    TablaMemoria[TablaDeDatos[1].pos+(op1&0x0000FFFF)+i]=(((valor)&(mascara>>i*8))>>(3-i)*8);
+                    TablaMemoria[TablaDeDatos[1].pos+(op1&0x0000FFFF)+i]=(((valor))>>(3-i)*8)&0x000000FF;
+                    //TablaMemoria[TablaDeDatos[1].pos+(op1&0x0000FFFF)+i]=(((valor)&(mascara>>i*8))>>(3-i)*8);
                 else
-                    TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]=(((valor)&(mascara>>i*8))>>(3-i)*8);
+                    TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]=(((valor))>>(3-i)*8);
+                    //TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]=(((valor)&(mascara>>i*8))>>(3-i)*8);
             }
         }else{
             tiporeg=op1>>4;
@@ -285,7 +287,6 @@ void CMP(long int op1,char top1,long int valor2,char *TablaMemoria,long int Tabl
         if (tiporeg==3)
             valor=(TablaRegistros[(op1&0x0F)]&0x0000FFFF);
     }
-    //valor=(valor)&0x000001FF;//esto es una especie de propagacion "de signo", mejorar interpretacion.
     Ultima_operacion(TablaRegistros,valor-valor2);
 }
 void SHL(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
@@ -610,10 +611,11 @@ long int Valor_mem(long int op,char *TablaMemoria,long int TablaRegistros[],TDD 
     long int resultado=0;
     for (int i=0;i<=3;i++){
         if (((op&0x000F0000)>>16)==1)
-            resultado+=TablaMemoria[TablaDeDatos[1].pos+(op&0x0000FFFF)+i];
+            resultado+=(TablaMemoria[TablaDeDatos[1].pos+(op&0x0000FFFF)+i])&0x000000FF;
         else
-            resultado+=(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op&0x000F0000)>>16)]+(op&0x0000FFFF)+i]);
-        resultado=resultado<<(3-i)*8;
+            resultado+=(TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op&0x000F0000)>>16)]+(op&0x0000FFFF)+i])&0x000000FF;
+        if (i!=3)
+            resultado=resultado<<8;
     }
     return resultado;
 }

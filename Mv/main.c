@@ -12,8 +12,7 @@ int main()
 
     Inicia_registro(TablaRegistros);//inicializo la tabla de registros.
     Inicia_memoria(TablaMemoria,TablaDeDatos);//inicio la tabla de memoria y la de datos.
-    printf("%d %X",1,-1);
-    //Lectura(TablaMemoria,TablaRegistros,TablaDeDatos);
+    Lectura(TablaMemoria,TablaRegistros,TablaDeDatos);
 }
 
 void Inicia_registro(long int TablaRegistros[]){
@@ -27,7 +26,7 @@ void Inicia_registro(long int TablaRegistros[]){
 void Inicia_memoria(char *TablaMemoria,TDD TablaDeDatos[]){
 
     char lec;
-    FILE *arch=fopen("prueba2.vmx","rb");
+    FILE *arch=fopen("prueba4.vmx","rb");
     int i=0;
 
     TablaDeDatos[0].pos=0;
