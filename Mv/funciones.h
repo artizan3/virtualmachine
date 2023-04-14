@@ -44,7 +44,12 @@ void Ultima_operacion(long int TablaRegistros[],long int nz);
 
 void Pre_Funcion(short int cant,long int op1,long int op2,char top1,char top2,char operacion,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
 long int valor;
+    if (operacion<0 || operacion>12){
+        printf("el codigo de operacion no existe");
+        exit(-1);
+    }
     if (cant==2){
+
         if (operacion!=3){
             valor=Operando2(op2,top2,TablaMemoria,TablaRegistros,TablaDeDatos);
             funciones[operacion](op1,top1,valor,TablaMemoria,TablaRegistros,TablaDeDatos);
@@ -59,43 +64,14 @@ long int valor;
     }
 }
 
-long int Operando2(long int op2,char top2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
- char tiporeg;
- long int resultado=0;
-    if (top2==2){
-        if (op2==1)
-            resultado=TablaDeDatos[1].pos;
-        else{
-            tiporeg=op2>>4;
-            if (tiporeg==3)
-                resultado=(TablaRegistros[(op2&0x0F)]&0x0000FFFF);
-            if (tiporeg==2)
-                resultado=((TablaRegistros[(op2&0x0F)]&0x0000FF00)>>8);
-            if (tiporeg==1)
-                resultado=(TablaRegistros[(op2&0x0F)]&0x000000FF);
-            if (tiporeg==0)
-                resultado=TablaRegistros[(op2&0x0F)];
-        }
-    }
-    if (top2==0){
-       resultado=Valor_mem(op2,TablaMemoria,TablaRegistros,TablaDeDatos);
-    }
-    if (top2==1)
-        resultado=(op2);
-    return (resultado);
-}// lo que hace la funcion es ya tomar directamente el valor de el operando 2 y dejarlo listo para oprerar (en caso de ser posible lo deja en los bytes menos significativos)
-
 void MOV(long int op1,char top1,long int valor,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
 char tiporeg;
-//long int mascara=0xFF000000;
     if (top1==0){
             for(int i=0;i<=3;i++){
                 if (((op1&0x000F0000)>>16)==1)
                     TablaMemoria[TablaDeDatos[1].pos+(op1&0x0000FFFF)+i]=(((valor))>>(3-i)*8)&0x000000FF;
-                    //TablaMemoria[TablaDeDatos[1].pos+(op1&0x0000FFFF)+i]=(((valor)&(mascara>>i*8))>>(3-i)*8);
                 else
                     TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]=(((valor))>>(3-i)*8);
-                    //TablaMemoria[TablaDeDatos[1].pos+TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]=(((valor)&(mascara>>i*8))>>(3-i)*8);
             }
         }else{
             tiporeg=op1>>4;
@@ -188,7 +164,6 @@ long int aux,aux2;
         if (top1==0){
            aux=Valor_mem(op1,TablaMemoria,TablaRegistros,TablaDeDatos);
            aux2=Valor_mem(op2,TablaMemoria,TablaRegistros,TablaDeDatos);
-          // printf("%d %d",aux,aux2);
         }else{
             aux=Operando2(op1,top1,TablaMemoria,TablaRegistros,TablaDeDatos);
             aux2=Operando2(op2,top2,TablaMemoria,TablaRegistros,TablaDeDatos);
@@ -269,6 +244,9 @@ void DIV(long int op1,char top1,long int valor,char *TablaMemoria,long int Tabla
             TablaRegistros[(op1&0x0F)]=aux;
         }
         Ultima_operacion(TablaRegistros,nz);
+    }else{
+        printf("no se puede dividir por 0");
+        exit(-1);
     }
 }
 void CMP(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
@@ -287,9 +265,6 @@ void CMP(long int op1,char top1,long int valor2,char *TablaMemoria,long int Tabl
         if (tiporeg==3)
             valor=(TablaRegistros[(op1&0x0F)]&0x0000FFFF);
     }
-   // printf("%X %X %X %X\n",TablaMemoria[TablaDeDatos[1].pos+10],TablaMemoria[TablaDeDatos[1].pos+11],TablaMemoria[TablaDeDatos[1].pos+12],TablaMemoria[TablaDeDatos[1].pos+13]);
-   // printf("%X %X %X %X\n",TablaMemoria[TablaDeDatos[1].pos+20],TablaMemoria[TablaDeDatos[1].pos+21],TablaMemoria[TablaDeDatos[1].pos+22],TablaMemoria[TablaDeDatos[1].pos+23]);
-   // printf("%d %d\n",valor,valor2);
     Ultima_operacion(TablaRegistros,valor-valor2);
 }
 void SHL(long int op1,char top1,long int valor2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
@@ -489,8 +464,7 @@ void SYS(long int op,char top,char *TablaMemoria,long int TablaRegistros[],TDD T
                 tot+=(TablaMemoria[pos+j-1])&0x000000FF;
                 if (j!=byt)
                     tot=tot<<8;
-            }
-            //asumimos que CH es como mucho 4. existe la posibilidad de que sea mayor?
+            }//asumimos que CH es como mucho 4. existe la posibilidad de que sea mayor?
             Escribe(tot,tipo);
             printf("\n");
         pos++;
@@ -602,13 +576,37 @@ long int aux=0,tiporeg,nz=0;
     Ultima_operacion(TablaRegistros,nz);
 }
 
+long int Operando2(long int op2,char top2,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
+ char tiporeg;
+ long int resultado=0;
+    if (top2==2){
+        if (op2==1)
+            resultado=TablaDeDatos[1].pos;
+        else{
+            tiporeg=op2>>4;
+            if (tiporeg==3)
+                resultado=(TablaRegistros[(op2&0x0F)]&0x0000FFFF);
+            if (tiporeg==2)
+                resultado=((TablaRegistros[(op2&0x0F)]&0x0000FF00)>>8);
+            if (tiporeg==1)
+                resultado=(TablaRegistros[(op2&0x0F)]&0x000000FF);
+            if (tiporeg==0)
+                resultado=TablaRegistros[(op2&0x0F)];
+        }
+    }
+    if (top2==0){
+       resultado=Valor_mem(op2,TablaMemoria,TablaRegistros,TablaDeDatos);
+    }
+    if (top2==1)
+        resultado=(op2);
+    return (resultado);
+}// lo que hace la funcion es ya tomar directamente el valor de el operando 2 y dejarlo listo para oprerar (en caso de ser posible lo deja en los bytes menos significativos)
 void Ultima_operacion(long int TablaRegistros[],long int nz){
-    //efectuo los cambios en el CC.
     TablaRegistros[8]=0;// seteo el cc en 0 por si las dudas
     if (nz==0)
-        TablaRegistros[8]=0x40000000; //segundo bit mas significativo en 1 por ser una operacion que dio 0
+        TablaRegistros[8]=0x40000000;
     if (nz<0)
-        TablaRegistros[8]=0x80000000;  //primer bit mas significativo en 1 por ser una operacion que dio <0
+        TablaRegistros[8]=0x80000000;
 }
 long int Valor_mem(long int op,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
     long int resultado=0;

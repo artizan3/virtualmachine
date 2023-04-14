@@ -3,18 +3,17 @@
 #include "funciones.h"
 #include "dissasembler.h"
 
-int main()
+int main(int argc,char *argv[])
 {
-    int max=16384;
     TDD TablaDeDatos[1];//tabla de datos, pos 1 CS, pos 2 DS.
     long int TablaRegistros[15];//long int ya que son 4 bytes.
     char TablaMemoria[16384]; //TablaMemoria es la tabla de memoria donde las primeras n posiciones pertencen al CS.
 
-
     Inicia_registro(TablaRegistros);//inicializo la tabla de registros.
-    Inicia_memoria(TablaMemoria,TablaDeDatos);//inicio la tabla de memoria y la de datos.
-    //Dissasembler_mostrar(TablaMemoria,TablaRegistros,TablaDeDatos);//solo se debe ejecutar si el usuario lo pide
-    Lectura(TablaMemoria,TablaRegistros,TablaDeDatos);
+    Inicia_memoria(argv[1],TablaMemoria,TablaDeDatos);//inicio la tabla de memoria y la de datos
+    if(argv[2]!=NULL && strcmp(argv[2],"-d")==0)
+      Dissasembler_mostrar(TablaMemoria,TablaRegistros,TablaDeDatos);
+   // Lectura(TablaMemoria,TablaRegistros,TablaDeDatos);
 }
 
 void Inicia_registro(long int TablaRegistros[]){
@@ -25,25 +24,32 @@ void Inicia_registro(long int TablaRegistros[]){
         TablaRegistros[9]=0;//ac
 }
 
-void Inicia_memoria(char *TablaMemoria,TDD TablaDeDatos[]){
-    char lec;
-    FILE *arch=fopen("prueba4.vmx","rb");
-    int i=0;
-
-    TablaDeDatos[0].pos=0;
-    while (!feof(arch)){
-        fread(&lec,sizeof(char),1,arch);
-        if (i==7){
-            TablaDeDatos[0].tamano=(int)lec;
-            TablaDeDatos[1].pos=lec;
-            TablaDeDatos[1].tamano=sizeof(TablaMemoria)-(int)lec;
+void Inicia_memoria(char *dire,char *TablaMemoria,TDD TablaDeDatos[]){
+    char lec,nombre[6];
+    FILE *arch=fopen(dire,"rb");
+    int i=0,valor=0;
+    if (arch!=NULL){
+        fread(nombre,sizeof(char),5,arch);//lee el titulo
+        fread(&lec,sizeof(char),1,arch);//lee la version
+        fread(&lec,sizeof(char),1,arch);//leeo el 1er byte del tamaño
+        valor+=lec;
+        fread(&lec,sizeof(char),1,arch);//leo el segundo
+        valor=(valor<<8);//como se lee el little indian tengo q haer corrimineto
+        valor+=lec;
+        TablaDeDatos[0].pos=0;
+        TablaDeDatos[0].tamano=valor;
+        TablaDeDatos[1].pos=valor;
+        TablaDeDatos[1].tamano=sizeof(TablaMemoria)-valor;
+        while (!feof(arch)){
+            fread(&lec,sizeof(char),1,arch);
+            TablaMemoria[i]=lec;
+            i++;
         }
-        if (i>7){
-            TablaMemoria[i-8]=lec;
-        }
-        i++;
+        fclose(arch);
+    }else{
+        printf("el archivo no existe");
+        exit(-1);
     }
-    fclose(arch);
 }
 
 void Lectura(char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
@@ -51,7 +57,7 @@ void Lectura(char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
     short int cant;
     long int op1,op2;
     int corte;
-    while (TablaRegistros[5]!=TablaDeDatos[1].pos && cant!=0)
+    while (TablaRegistros[5]!=TablaDeDatos[1].pos)
     {
         op1=0;
         op2=0;
@@ -86,8 +92,8 @@ void Lectura(char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
 }
 
 void Cant_op(char instruccion,char *top1,char *top2,short int *cant){
-    *top1=(instruccion>>6)&0x3;//haciendo el corrimiento me quedaria 00XX donde XX es el valor del operando
-    *top2=(instruccion>>4)&0x3;//haciendo la operacion tambien quedaria 00XX.
+    *top1=(instruccion>>6)&0x03;//haciendo el corrimiento me quedaria 00XX donde XX es el valor del operando
+    *top2=(instruccion>>4)&0x03;//haciendo la operacion tambien quedaria 00XX.
     if (*top1==3)
         *cant=0;
     else
