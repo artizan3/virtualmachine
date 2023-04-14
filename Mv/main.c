@@ -11,9 +11,9 @@ int main(int argc,char *argv[])
 
     Inicia_registro(TablaRegistros);//inicializo la tabla de registros.
     Inicia_memoria(argv[1],TablaMemoria,TablaDeDatos);//inicio la tabla de memoria y la de datos
-    if(argv[2]!=NULL && strcmp(argv[2],"-d")==0)
-      Dissasembler_mostrar(TablaMemoria,TablaRegistros,TablaDeDatos);
-   // Lectura(TablaMemoria,TablaRegistros,TablaDeDatos);
+    //if(argv[2]!=NULL && strcmp(argv[2],"-d")==0)
+    //  Dissasembler_mostrar(TablaMemoria,TablaRegistros,TablaDeDatos);
+    Lectura(TablaMemoria,TablaRegistros,TablaDeDatos);
 }
 
 void Inicia_registro(long int TablaRegistros[]){
@@ -47,7 +47,7 @@ void Inicia_memoria(char *dire,char *TablaMemoria,TDD TablaDeDatos[]){
         }
         fclose(arch);
     }else{
-        printf("el archivo no existe");
+        printf("ERROR(0): el archivo no existe");
         exit(-1);
     }
 }

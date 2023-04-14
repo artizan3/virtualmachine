@@ -44,12 +44,13 @@ void Ultima_operacion(long int TablaRegistros[],long int nz);
 
 void Pre_Funcion(short int cant,long int op1,long int op2,char top1,char top2,char operacion,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
 long int valor;
+    if (top1==0)
+        Integridad_op(op1,TablaRegistros,TablaRegistros);
     if (operacion<0 || operacion>12){
-        printf("el codigo de operacion no existe");
+        printf("ERROR(1): el codigo de operacion no existe");
         exit(-1);
     }
     if (cant==2){
-
         if (operacion!=3){
             valor=Operando2(op2,top2,TablaMemoria,TablaRegistros,TablaDeDatos);
             funciones[operacion](op1,top1,valor,TablaMemoria,TablaRegistros,TablaDeDatos);
@@ -245,7 +246,7 @@ void DIV(long int op1,char top1,long int valor,char *TablaMemoria,long int Tabla
         }
         Ultima_operacion(TablaRegistros,nz);
     }else{
-        printf("no se puede dividir por 0");
+        printf("ERROR(2): no se puede dividir por 0");
         exit(-1);
     }
 }
@@ -620,4 +621,19 @@ long int Valor_mem(long int op,char *TablaMemoria,long int TablaRegistros[],TDD 
     }
     return resultado;
 }
-
+void Integridad_op(long int op,long int TablaRegistros[],TDD TablaDeDatos[]){
+    char pos0=TablaDeDatos[1].pos,reg=((op&0x00FF0000)>>16);
+    short int valor=0,offset=(op&0x0000FFFF);
+    if (reg==0){
+        valor=offset;
+    }else{
+        if (reg==1)
+            valor=pos0+offset;
+        else
+            valor=pos0+TablaRegistros[reg]+offset;
+    }
+    if (valor<pos0){
+        printf("ERROR (3): estas entrando al CS");
+        exit(-1);
+    }
+}
