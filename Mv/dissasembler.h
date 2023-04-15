@@ -1,37 +1,40 @@
-#define MAX 12
-void Muesta_dissasembler(short int cant,long int op1,long int op2,char top1,char top2,char operacion,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]);
+#define MAX 13
+#define MAXREG 16
+void Dissasembler_mostrar(MV mv);
+void Muesta_dissasembler(short int cant,long int op1,long int op2,char top1,char top2,char operacion);
 void Muestra_op(short int cant,long int op,char top);
 void Muestra_byte(char valor);
+void Muestra_mem(char ip);
 
 typedef char* nmonico;
 nmonico nmonico1[MAX]={"MOV","ADD","SUB","SWAP","MUL","DIV","CMP","SHL","SHR","AND","OR","XOR"};
 nmonico nmonico2[MAX]={"SYS","JMP","JZ","JP","JN","JNZ","JNP","JNN","LDL","LDH","RND","NOT"};
 
 typedef char *reg_nom;
-reg_nom nombres[16]={"CS","DS",0,0,0,"IP",0,0,"CC","AC","EAX","EBX","ECX","EDX","EEX","EFX"};
+reg_nom nombres[MAXREG]={"CS","DS",0,0,0,"IP",0,0,"CC","AC","EAX","EBX","ECX","EDX","EEX","EFX"};
 
-void Dissasembler_mostrar(char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
+void Dissasembler_mostrar(MV mv){
     char top1,top2,operacion;
     short int espacios,cant;
     long int op1,op2;
     int corte;
     long int cont=0;
-    while (cont<TablaDeDatos[1].pos)
+    while (cont<mv.TablaDeDatos[1].pos)
     {
         espacios=0;
         op1=0;
         op2=0;
-        operacion=TablaMemoria[cont]&0x0F;
-        Muestra_mem(cont);//muestra la pos ip
-        Muestra_byte(TablaMemoria[cont]);//muestra la operacion
+        operacion=mv.TablaMemoria[cont]&0x0F;
+        Muestra_mem(cont);
+        Muestra_byte(mv.TablaMemoria[cont]);
         espacios++;
-        Cant_op(TablaMemoria[cont],&top1,&top2,&cant);
+        Cant_op(mv.TablaMemoria[cont],&top1,&top2,&cant);
         corte=top1^0x3;
         if (cant==2){
             for (int i=1;i<=corte;i++){
                 cont++;
-                Muestra_byte(TablaMemoria[cont]);
-                op1+=(TablaMemoria[cont])&0x000000FF;
+                Muestra_byte(mv.TablaMemoria[cont]);
+                op1+=(mv.TablaMemoria[cont])&0x000000FF;
                 if (i!=corte)
                     op1=op1<<8;
             }
@@ -39,8 +42,8 @@ void Dissasembler_mostrar(char *TablaMemoria,long int TablaRegistros[],TDD Tabla
             corte=top2^0x3;
             for (int i=1;i<=corte;i++){
                 cont++;
-                Muestra_byte(TablaMemoria[cont]);
-                op2+=(TablaMemoria[cont])&0x000000FF;
+                Muestra_byte(mv.TablaMemoria[cont]);
+                op2+=(mv.TablaMemoria[cont])&0x000000FF;
                 if (i!=corte)
                     op2=op2<<8;
             }
@@ -48,8 +51,8 @@ void Dissasembler_mostrar(char *TablaMemoria,long int TablaRegistros[],TDD Tabla
         }else{
             for (int i=1;i<=corte;i++){
                 cont++;
-                Muestra_byte(TablaMemoria[cont]);
-                op1+=(TablaMemoria[cont])&0x000000FF;
+                Muestra_byte(mv.TablaMemoria[cont]);
+                op1+=(mv.TablaMemoria[cont])&0x000000FF;
                 if (i!=corte)
                     op1=op1<<8;
             }
@@ -59,7 +62,7 @@ void Dissasembler_mostrar(char *TablaMemoria,long int TablaRegistros[],TDD Tabla
         if (espacios!=7)
             for (int i=espacios;i<7;i++)
                 printf("%s","   ");
-        Muestra_dissasembler(cant,op1,op2,top1,top2,operacion,TablaMemoria,TablaRegistros,TablaDeDatos);
+        Muestra_dissasembler(cant,op1,op2,top1,top2,operacion);
     }
 }
 void Muestra_mem(char ip){
@@ -68,7 +71,7 @@ void Muestra_mem(char ip){
 void Muestra_byte(char valor){
     printf("%2.2X ",valor&0xFF);
 }
-void Muestra_dissasembler(short int cant,long int op1,long int op2,char top1,char top2,char operacion,char *TablaMemoria,long int TablaRegistros[],TDD TablaDeDatos[]){
+void Muestra_dissasembler(short int cant,long int op1,long int op2,char top1,char top2,char operacion){
     printf("| ");
     if (cant==2){
         printf("%s ",nmonico1[operacion]);
@@ -86,9 +89,9 @@ void Muestra_dissasembler(short int cant,long int op1,long int op2,char top1,cha
     printf("\n");
 }
 void Muestra_op(short int cant,long int op,char top){
-char tiporeg;
+    char tiporeg;
     if (top==1)
-        printf("%d",op);
+        printf("%X",op);
     if (top==0){
         if (((op&0x000F0000)>>16)==1)
             printf("[%d]",op&0x0000FFFF);
@@ -97,9 +100,9 @@ char tiporeg;
     }
     if (top==2){
         tiporeg=op>>4;
-        if (op&0x0F==1){
+        if ((op&0x0F)==1){
             printf("%s",nombres[1]);
-        }else
+        }else{
             if (tiporeg==0)
                 printf("%s",nombres[op&0x0F]);
             if (tiporeg==1)
@@ -108,5 +111,7 @@ char tiporeg;
                 printf("%XH",op&0x0F);
             if (tiporeg==3)
                 printf("%XX",op&0x0F);
+        }
+
     }
 }
