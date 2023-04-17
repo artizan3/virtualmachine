@@ -51,6 +51,9 @@ void Ultima_operacion(MV *mv,long int nz);
 void Integridad_op(long int op,MV mv);
 void Leer(int tipo,long int *tot);
 void Escribe(long int valor,int tipo);
+long int Valor_reg(char tipo,long int op,MV mv);
+long int Suma_reg(char tipo,long int op,MV mv);
+long int Mascara_valor(long int valor, char tipo);
 
 void Pre_Funcion(short int cant,long int op1,long int op2,char top1,char top2,char operacion,MV *mv){
     long int valor;
@@ -99,7 +102,7 @@ char tiporeg;
         }
 }
 void ADD(long int op1,char top1,long int valor,MV *mv){
-    char tiporeg;
+    char tiporeg=op1>>4;
     long int aux=0,nz=0;
     if (top1==0){
         long int valorm=Valor_mem(op1,*mv);
@@ -107,26 +110,14 @@ void ADD(long int op1,char top1,long int valor,MV *mv){
         valorm=nz;
         MOV(op1,top1,valorm,mv);
     }else{
-        tiporeg=op1>>4;
-        if (tiporeg==0){
-            aux=(*mv).TablaRegistros[(op1&0x0F)]+valor;
-            nz=aux;
-        }
-        if (tiporeg==1){
-            aux=((*mv).TablaRegistros[(op1&0x0F)]&0x000000FF)+(valor&0x000000FF);
-            nz=aux;
-            aux+=((*mv).TablaRegistros[(op1&0x0F)]&0xFFFFFF00);
-        }
-        if (tiporeg==2){
-            aux=((*mv).TablaRegistros[(op1&0x0F)]&0x0000FF00)+((valor&0x000000FF)<<8);
+        aux=Valor_reg(top1,op1,*mv);
+        valor=Mascara_valor(valor,tiporeg);
+        aux+=valor;
+        nz=aux;
+        if (tiporeg==2)
             nz=aux>>8;
-            aux+=((*mv).TablaRegistros[(op1&0x0F)]&0xFFFF00FF);
-        }
-        if (tiporeg==3){
-            aux=((*mv).TablaRegistros[(op1&0x0F)]&0x0000FFFF)+(valor&0x000FFFF);
-            nz=aux;
-            aux+=((*mv).TablaRegistros[(op1&0x0F)]&0xFFFF0000);
-        }
+        if (tiporeg!=0)
+            aux+=Suma_reg(top1,op1,*mv);
         (*mv).TablaRegistros[(op1&0x0F)]=aux;
     }
     Ultima_operacion(mv,nz);
@@ -578,15 +569,6 @@ void NOT(long int op,char top,MV *mv){
     }
     Ultima_operacion(mv,nz);
 }
-/**
-lo que podemos hacer es que la funcion esta deje el valor preparado
-y acomodado si el operando 1 es memoria, dejamos el valor preparado de otra forma.
-entonces las funciones ya se encargarian de algo menos,
-despues hacemos una funcion que cargue el valor en el aux y deje en 0
-los registros, va la parte del registro.
-en la funcion SOLAMENTE se opera, se genera NZ. cargamos nuevamente el
-registro en otra funcion y llamamos a ultima operacion
-**/
 long int Valor_op(long int op,char top,MV mv){
     char tiporeg;
     long int resultado=0;
@@ -646,4 +628,38 @@ void Integridad_op(long int op,MV mv){
         printf("ERROR (3): estas entrando al CS");
         exit(-1);
     }
+}
+long int Valor_reg(char tipo,long int op,MV mv){
+    long int resultado=0;
+    if (tipo==0)
+        resultado=mv.TablaRegistros[(op&0x0F)];
+    if (tipo==1)
+        resultado=mv.TablaRegistros[(op&0x0F)]&0x000000FF;
+    if (tipo==2)
+        resultado=mv.TablaRegistros[(op&0x0F)]&0x0000FF00;
+    if (tipo==3)
+        resultado=mv.TablaRegistros[(op&0x0F)]&0x0000FFFF;
+    return resultado;
+}
+long int Suma_reg(char tipo,long int op,MV mv){
+    long int resultado=0;
+    if (tipo==1)
+        resultado=mv.TablaRegistros[(op&0x0F)]&0xFFFFFF00;
+    if (tipo==2)
+        resultado=mv.TablaRegistros[(op&0x0F)]&0xFFFF00FF;
+    if (tipo==3)
+        resultado=mv.TablaRegistros[(op&0x0F)]&0xFFFF0000;
+    return resultado;
+}
+long int Mascara_valor(long int valor, char tipo){
+    long int resultado=0;
+    if (tipo==0)
+        resultado=valor;
+    if (tipo==1)
+        resultado=valor&0x000000FF;
+    if (tipo==2)
+        resultado=(valor&0x000000FF)<<8;
+    if (tipo==3)
+        resultado=(valor&0x000FFFF);
+    return resultado;
 }
