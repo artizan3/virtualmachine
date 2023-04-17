@@ -1,12 +1,56 @@
 # depslib dependency file v1.0
-1681477667 source:c:\users\bruno trinitario\desktop\mv\main.c
+1681572084 source:c:\users\bruno trinitario\desktop\mv\main.c
 	<stdio.h>
 	<stdlib.h>
 	"funciones.h"
 	"dissasembler.h"
 
-1681477756 c:\users\bruno trinitario\desktop\mv\funciones.h
+1681772642 c:\users\bruno trinitario\desktop\mv\funciones.h
 	<time.h>
 
-1681425838 c:\users\bruno trinitario\desktop\mv\dissasembler.h
+1681497494 c:\users\bruno trinitario\desktop\mv\dissasembler.h
+
+1681480335 source:c:\users\bruno trinitario\desktop\mv - copy\main.c
+	<stdio.h>
+	<stdlib.h>
+	"funciones.h"
+	"dissasembler.h"
+
+1681482366 c:\users\bruno trinitario\desktop\mv - copy\funciones.h
+	<time.h>
+
+1681480228 c:\users\bruno trinitario\desktop\mv - copy\dissasembler.h
+
+1681586484 source:c:\users\bruno\onedrive\desktop\mv\main.c
+	<stdio.h>
+	<stdlib.h>
+	"funciones.h"
+	"dissasembler.h"
+
+1681695958 c:\users\bruno\onedrive\desktop\mv\funciones.h
+	<time.h>
+
+1681511894 c:\users\bruno\onedrive\desktop\mv\dissasembler.h
+
+1681586484 source:c:\users\bruno\onedrive\desktop\orga tps corregidos\mv\main.c
+	<stdio.h>
+	<stdlib.h>
+	"funciones.h"
+	"dissasembler.h"
+
+1681695958 c:\users\bruno\onedrive\desktop\orga tps corregidos\mv\funciones.h
+	<time.h>
+
+1681511894 c:\users\bruno\onedrive\desktop\orga tps corregidos\mv\dissasembler.h
+
+1681572084 source:c:\users\bruno trinitario\desktop\new folder\mv\main.c
+	<stdio.h>
+	<stdlib.h>
+	"funciones.h"
+	"dissasembler.h"
+
+1681681558 c:\users\bruno trinitario\desktop\new folder\mv\funciones.h
+	<time.h>
+
+1681497494 c:\users\bruno trinitario\desktop\new folder\mv\dissasembler.h
 
