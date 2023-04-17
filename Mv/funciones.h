@@ -1,7 +1,7 @@
 #include<time.h>
 typedef struct{
-char pos;
-int tamano;
+    char pos;
+    int tamano;
 }TDD;
 
 typedef struct{
@@ -497,8 +497,12 @@ void Leer(int tipo,long int *tot){
 void Escribe(long int valor,int tipo){
     if (tipo==1)
         printf("%d ",valor);
-    if (tipo==2)
-        printf("%c ",valor);
+    if (tipo==2){
+        if (valor>=32 && valor<=254)
+            printf("%c ",valor);
+        else
+            printf(". ");
+    }
     if (tipo==4)
         printf("%o ",valor);
     if (tipo==8)
