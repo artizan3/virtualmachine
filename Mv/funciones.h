@@ -1,8 +1,7 @@
 #include<time.h>
 #define MAX 16384
 typedef struct{
-    char pos;
-    int tamano;
+    long int pos,tamano;
 }TDD;
 
 typedef struct{
@@ -10,7 +9,6 @@ typedef struct{
     long int TablaRegistros[16];
     TDD TablaDeDatos[2];
 }MV;
-
 
 typedef void Funciones2op(long int op1,char top1,long int valor,MV *mv);
 void MOV(long int op1,char top1,long int valor,MV *mv);
@@ -81,7 +79,7 @@ void MOV(long int op1,char top1,long int valor,MV *mv){
                 if (((op1&0x000F0000)>>16)==1)
                     (*mv).TablaMemoria[(*mv).TablaDeDatos[1].pos+(op1&0x0000FFFF)+i]=(((valor))>>(3-i)*8)&0x000000FF;
                 else
-                    (*mv).TablaMemoria[(*mv).TablaDeDatos[1].pos+(*mv).TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]=(((valor))>>(3-i)*8);
+                    (*mv).TablaMemoria[(*mv).TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]=(((valor))>>(3-i)*8);
             }
         }else{
             valor=Mascara_registro(valor,tiporeg);
@@ -306,7 +304,7 @@ void SYS(long int op,char top,MV *mv){
             }
             Escribe(tot,tipo);
             printf("\n");
-            pos++;
+            pos+=byt;
         }
     }
     //lee por pantalla
@@ -315,7 +313,7 @@ void SYS(long int op,char top,MV *mv){
             Leer(tipo,&tot);
             for (int j=1;j<=byt;j++){
                 (*mv).TablaMemoria[pos]=(tot>>(byt-j)*8)&0x000000FF;
-                pos++;
+                pos+=byt;
             }
         }
     }
@@ -387,6 +385,7 @@ void NOT(long int op,char top,MV *mv){
     long int aux=0,tiporeg=op>>4,nz=0;
     if (top==0){
         long int valorm=Valor_mem(op,*mv);
+        valorm!=valorm;
         nz=!valorm;
         MOV(op,top,valorm,mv);
     }else{
@@ -438,7 +437,7 @@ long int Valor_mem(long int op,MV mv){
         if (((op&0x000F0000)>>16)==1)
             resultado+=(mv.TablaMemoria[mv.TablaDeDatos[1].pos+(op&0x0000FFFF)+i])&0x000000FF;
         else
-            resultado+=(mv.TablaMemoria[mv.TablaDeDatos[1].pos+mv.TablaRegistros[((op&0x000F0000)>>16)]+(op&0x0000FFFF)+i])&0x000000FF;
+            resultado+=(mv.TablaMemoria[mv.TablaRegistros[((op&0x000F0000)>>16)]+(op&0x0000FFFF)+i])&0x000000FF;
         if (i!=3)
             resultado=resultado<<8;
     }
@@ -453,7 +452,7 @@ void Integridad_op(long int op,MV mv){
         if (reg==1)
             valor=pos0+offset;
         else
-            valor=pos0+mv.TablaRegistros[reg]+offset;
+            valor=mv.TablaRegistros[reg]+offset;
     }
     if (valor<pos0){
         printf("ERROR (3): estas entrando al CS");

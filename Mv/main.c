@@ -14,8 +14,8 @@ int main(int argc,char *argv[])
     MV mv;
     Inicia_registro(&mv);
     Inicia_memoria(argv[1],&mv);
-    if(argv[2]!=NULL && strcmp(argv[2],"-d")==0)
-        Dissasembler_mostrar(mv);
+    //if(argv[2]!=NULL && strcmp(argv[2],"-d")==0)
+    //Dissasembler_mostrar(mv);
     Lectura(&mv);
 }
 
@@ -28,12 +28,12 @@ void Inicia_registro(MV *mv){
 }
 
 void Inicia_memoria(char *dire,MV *mv){
-    char lec,nombre[6];
-    FILE *arch=fopen(dire,"rb");
+    char version,lec,nombre[6];
+    FILE *arch=fopen("ej7.vmx","rb");
     int i=0,valor=0;
     if (arch!=NULL){
         fread(nombre,sizeof(char),5,arch);//lee el titulo
-        fread(&lec,sizeof(char),1,arch);//lee la version
+        fread(&version,sizeof(char),1,arch);//lee la version
         fread(&lec,sizeof(char),1,arch);//leeo el 1er byte del tamaño
         valor+=lec;
         fread(&lec,sizeof(char),1,arch);//leo el segundo
@@ -99,10 +99,12 @@ void Lectura(MV *mv){
             printf("ERROR(1): el codigo de operacion no existe");
             exit(-1);
         }
-        Pre_Funcion(cant,op1,op2,top1,top2,operacion,mv);//con esto arracamos la parte de hacer la funcion
+        if(cant!=0)
+            Pre_Funcion(cant,op1,op2,top1,top2,operacion,mv);//con esto arracamos la parte de hacer la funcion
+        else
+            (*mv).TablaRegistros[5]=(*mv).TablaDeDatos[1].pos;
     }
 }
-
 void Cant_op(char instruccion,char *top1,char *top2,short int *cant){
     *top1=(instruccion>>6)&0x03;//haciendo el corrimiento me quedaria 00XX donde XX es el valor del operando
     *top2=(instruccion>>4)&0x03;//haciendo la operacion tambien quedaria 00XX.

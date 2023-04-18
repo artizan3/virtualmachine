@@ -1,10 +1,10 @@
 #define MAX 13
 #define MAXREG 16
 void Dissasembler_mostrar(MV mv);
-void Muesta_dissasembler(short int cant,long int op1,long int op2,char top1,char top2,char operacion);
-void Muestra_op(short int cant,long int op,char top);
+void Muesta_dissasembler(long int cant,long int op1,long int op2,char top1,char top2,char operacion);
+void Muestra_op(long int cant,long int op,char top);
 void Muestra_byte(char valor);
-void Muestra_mem(char ip);
+void Muestra_mem(long int ip);
 
 typedef char* nmonico;
 nmonico nmonico1[MAX]={"MOV","ADD","SUB","SWAP","MUL","DIV","CMP","SHL","SHR","AND","OR","XOR"};
@@ -19,8 +19,7 @@ void Dissasembler_mostrar(MV mv){
     long int op1,op2;
     int corte;
     long int cont=0;
-    while (cont<mv.TablaDeDatos[1].pos)
-    {
+    while (cont<=mv.TablaDeDatos[1].pos){
         espacios=0;
         op1=0;
         op2=0;
@@ -65,13 +64,13 @@ void Dissasembler_mostrar(MV mv){
         Muestra_dissasembler(cant,op1,op2,top1,top2,operacion);
     }
 }
-void Muestra_mem(char ip){
+void Muestra_mem(long int ip){
     printf("[%4.4X] ",ip);
 }
 void Muestra_byte(char valor){
     printf("%2.2X ",valor&0xFF);
 }
-void Muestra_dissasembler(short int cant,long int op1,long int op2,char top1,char top2,char operacion){
+void Muestra_dissasembler(long int cant,long int op1,long int op2,char top1,char top2,char operacion){
     printf("| ");
     if (cant==2){
         printf("%s ",nmonico1[operacion]);
@@ -88,7 +87,7 @@ void Muestra_dissasembler(short int cant,long int op1,long int op2,char top1,cha
     }
     printf("\n");
 }
-void Muestra_op(short int cant,long int op,char top){
+void Muestra_op(long int cant,long int op,char top){
     char tiporeg;
     if (top==1)
         printf("%X",op);
@@ -115,3 +114,4 @@ void Muestra_op(short int cant,long int op,char top){
 
     }
 }
+
