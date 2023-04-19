@@ -48,8 +48,8 @@ long int Valor_op(long int op,char top,MV mv);
 long int Valor_mem(long int op,MV mv);
 void Ultima_operacion(MV *mv,long int nz);
 void Integridad_op(long int op,MV mv);
-void Leer(int tipo,long int *tot);
-void Escribe(long int valor,int tipo);
+void Leer(char tipo,long int *tot);
+void Escribe(long int valor,char tipo);
 long int Suma_reg(char tipo,long int op,MV mv);
 long int Valor_reg(char tipo,long int op,MV mv);
 long int Mascara_registro(long int valor, char tipo);
@@ -287,7 +287,8 @@ void XOR(long int op1,char top1,long int valor,MV *mv){
 
 void SYS(long int op,char top,MV *mv){
     long int valor,pos,tot;
-    int rep,byt,tipo;
+    int rep,byt;
+    char tipo;
     valor=Valor_op(op,top,*mv);
     pos=(*mv).TablaRegistros[13];//EDX
     rep=(*mv).TablaRegistros[12]&0x000000FF;//CL
@@ -318,7 +319,7 @@ void SYS(long int op,char top,MV *mv){
         }
     }
 }
-void Leer(int tipo,long int *tot){
+void Leer(char tipo,long int *tot){
     if (tipo==1)
         scanf("%d",tot);
     if (tipo==2)
@@ -328,21 +329,31 @@ void Leer(int tipo,long int *tot){
     if (tipo==8)
         scanf("%x",tot);
 }
-void Escribe(long int valor,int tipo){
-    if (tipo==1)
+void Escribe(long int valor,char tipo){
+    if (tipo==0x0F){
         printf("%d ",valor);
-    if (tipo==2){
         if (valor>=32 && valor<=254)
             printf("%c ",valor);
         else
             printf(". ");
-    }
+        printf("%o ",valor);
+        printf("%X ",valor);
+    }else{
+       if (tipo==1)
+        printf("%d ",valor);
+        if (tipo==2){
+            if (valor>=32 && valor<=254)
+                printf("%c ",valor);
+            else
+                printf(". ");
+        }
     if (tipo==4)
         printf("%o ",valor);
     if (tipo==8)
         printf("%X ",valor);
-    if (tipo==0x000F)
-        printf("%c %X %o %d ",valor,valor,valor,valor);
+
+
+    }
 }
 void JMP(long int valor,MV *mv){
     (*mv).TablaRegistros[5]=valor;

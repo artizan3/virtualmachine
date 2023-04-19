@@ -14,8 +14,8 @@ int main(int argc,char *argv[])
     MV mv;
     Inicia_registro(&mv);
     Inicia_memoria(argv[1],&mv);
-    //if(argv[2]!=NULL && strcmp(argv[2],"-d")==0)
-    //Dissasembler_mostrar(mv);
+    if(argv[2]!=NULL && strcmp(argv[2],"-d")==0)
+        Dissasembler_mostrar(mv);
     Lectura(&mv);
 }
 
@@ -29,16 +29,18 @@ void Inicia_registro(MV *mv){
 
 void Inicia_memoria(char *dire,MV *mv){
     char version,lec,nombre[6];
-    FILE *arch=fopen("ej7.vmx","rb");
-    int i=0,valor=0;
+    FILE *arch=fopen(dire,"rb");
+    int i=0;
+    unsigned char val;
+    unsigned short int valor=0;
     if (arch!=NULL){
         fread(nombre,sizeof(char),5,arch);//lee el titulo
         fread(&version,sizeof(char),1,arch);//lee la version
-        fread(&lec,sizeof(char),1,arch);//leeo el 1er byte del tamaño
-        valor+=lec;
-        fread(&lec,sizeof(char),1,arch);//leo el segundo
-        valor=(valor<<8);//como se lee el little indian tengo q haer corrimineto
-        valor+=lec;
+        fread(&val,sizeof(char),1,arch);
+        valor+=val;
+        fread(&val,sizeof(char),1,arch);
+        valor=(valor<<4);
+        valor+=val;
         (*mv).TablaDeDatos[0].pos=0;
         (*mv).TablaDeDatos[0].tamano=valor;
         (*mv).TablaDeDatos[1].pos=valor;
