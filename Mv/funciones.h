@@ -49,7 +49,7 @@ long int Valor_mem(long int op,MV mv);
 void Ultima_operacion(MV *mv,long int nz);
 void Integridad_op(long int op,MV mv);
 void Leer(char tipo,long int *tot);
-void Escribe(long int valor,unsigned char tipo);
+void Escribe(long int valor,unsigned char tipo,int tamano);
 long int Suma_reg(char tipo,long int op,MV mv);
 long int Valor_reg(char tipo,long int op,MV mv);
 long int Mascara_registro(long int valor, char tipo);
@@ -306,12 +306,12 @@ void SYS(long int op,char top,MV *mv){
         for(int i=1;i<=rep;i++){
             tot=0;
             for (int j=1;j<=byt;j++){
-                tot+=((*mv).TablaMemoria[pos+j-1])&0x000000FF;
+                tot+=((*mv).TablaMemoria[pos+j-1])&0xFF;
                 if (j!=byt)
                     tot=tot<<8;
             }
             Muestra_mem(pos-(*mv).TablaDeDatos[1].pos);
-            Escribe(tot,tipo);
+            Escribe(tot,tipo,byt);
             printf("\n");
             pos+=byt;
         }
@@ -338,26 +338,24 @@ void Leer(char tipo,long int *tot){
     if (tipo==8)
         scanf("%x",tot);
 }
-void Escribe(long int valor,unsigned char tipo){
+void Escribe(long int valor,unsigned char tipo,int tamano){
     unsigned char u;
-    if (tipo==0x0F){
-        printf("#%d ",valor);
-        if (valor>=32 && valor<=254)
-            printf("%c ",valor);
-        else
-            printf(". ");
-        printf("@%o ",valor);
-        printf("%c%X ",'%',valor);
-    }else{
+    long int aux;
         u=tipo&0x1;
         if (u!=0)
             printf("#%d ",valor);
         u=tipo&0x2;
         if (u!=0){
-            if (valor>=32 && valor<=254)
-                printf("%c ",valor);
-            else
-                printf(". ");
+            printf("'");
+            //mostrar byte a byte
+            for(int i=1;i<=tamano;i++){
+                aux=(valor>>(tamano-i)*8)&0x000000FF;
+                if (aux>=32 && aux<=126)
+                    printf("%c",aux);
+                else
+                    printf(".");
+            }
+            printf(" ");
         }
         u=tipo&0x4;
         if (u!=0)
@@ -366,7 +364,6 @@ void Escribe(long int valor,unsigned char tipo){
         if (u!=0)
             printf("%c%X ",'%',valor);
     }
-}
 void JMP(long int valor,MV *mv){
     (*mv).TablaRegistros[5]=valor;
 }
@@ -408,12 +405,12 @@ void NOT(long int op,char top,MV *mv){
     long int aux=0,tiporeg=op>>4,nz=0;
     if (top==0){
         long int valorm=Valor_mem(op,*mv);
-        valorm!=valorm;
-        nz=!valorm;
+        valorm=~valorm;
+        nz=valorm;
         MOV(op,top,valorm,mv);
     }else{
         aux=Valor_reg(tiporeg,op,*mv);
-        aux=!aux;
+        aux=~aux;
         aux=Mascara_registro(aux,tiporeg);
         nz=aux;
         if (tiporeg!=0)
@@ -426,33 +423,23 @@ long int Valor_op(long int op,char top,MV mv){
     long int tiporeg=op>>4;;
     long int resultado=0;
     if (top==2){
-      //  if (op==1)
-      //     resultado=mv.TablaDeDatos[1].pos;
-      // else{
-
             if (tiporeg==3)
-                resultado=(mv.TablaRegistros[(op&0x0F)]&0x0000FFFF);
+                resultado=(short int)(mv.TablaRegistros[(op&0x0F)]&0x0000FFFF);
             if (tiporeg==2)
-                resultado=((mv.TablaRegistros[(op&0x0F)]&0x0000FF00)>>8);
+                resultado=(char)((mv.TablaRegistros[(op&0x0F)]&0x0000FF00)>>8);
             if (tiporeg==1)
-                resultado=(mv.TablaRegistros[(op&0x0F)]&0x000000FF);
+                resultado=(char)(mv.TablaRegistros[(op&0x0F)]&0x000000FF);
             if (tiporeg==0)
                 resultado=mv.TablaRegistros[(op&0x0F)];
-       // }
     }
     if (top==0){
        resultado=Valor_mem(op,mv);
     }
-    if (top==1)
+    if (top==1){
+        op=(short int)op;
         resultado=(op);
+    }
     return (resultado);
-}
-void Ultima_operacion(MV *mv,long int nz){
-    (*mv).TablaRegistros[8]=0;
-    if (nz==0)
-        (*mv).TablaRegistros[8]=0x40000000;
-    if (nz<0)
-        (*mv).TablaRegistros[8]=0x80000000;
 }
 long int Valor_mem(long int op,MV mv){
     long int resultado=0;
@@ -463,6 +450,13 @@ long int Valor_mem(long int op,MV mv){
             resultado=resultado<<8;
     }
     return resultado;
+}
+void Ultima_operacion(MV *mv,long int nz){
+    (*mv).TablaRegistros[8]=0;
+    if (nz==0)
+        (*mv).TablaRegistros[8]=0x40000000;
+    if (nz<0)
+        (*mv).TablaRegistros[8]=0x80000000;
 }
 void Integridad_op(long int op,MV mv){
     char pos0=mv.TablaDeDatos[1].pos;
