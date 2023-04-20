@@ -2,19 +2,24 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Debug" />
+	<File name="funciones.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="7" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="9905" topLine="301" />
+		</Cursor>
+		<Folding>
+			<Collapse line="423" />
+			<Collapse line="486" />
+			<Collapse line="498" />
+		</Folding>
+	</File>
 	<File name="main.c" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="6" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="377" topLine="57" />
+			<Cursor1 position="414" topLine="0" />
 		</Cursor>
 	</File>
 	<File name="dissasembler.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="4" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="792" topLine="0" />
-		</Cursor>
-	</File>
-	<File name="funciones.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="7" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="10585" topLine="327" />
+			<Cursor1 position="2224" topLine="66" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

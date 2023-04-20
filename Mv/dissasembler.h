@@ -63,6 +63,7 @@ void Dissasembler_mostrar(MV mv){
                 printf("%s","   ");
         Muestra_dissasembler(cant,op1,op2,top1,top2,operacion);
     }
+    printf("------------------------\n");
 }
 void Muestra_mem(long int ip){
     printf("[%4.4X] ",ip);
@@ -98,7 +99,7 @@ void Muestra_op(long int cant,long int op,char top){
             printf("[%s+%d]",nombres[op>>16],op&0x0000FFFF);
     }
     if (top==2){
-        tiporeg=op>>4;
+        tiporeg=(op>>4)&0x3;
         if ((op&0x0F)==1){
             printf("%s",nombres[1]);
         }else{

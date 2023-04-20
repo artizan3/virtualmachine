@@ -28,28 +28,29 @@ void Inicia_registro(MV *mv){
 }
 
 void Inicia_memoria(char *dire,MV *mv){
-    char version,lec,nombre[6];
+    char version,lec,nombre[5];
     FILE *arch=fopen(dire,"rb");
     int i=0;
-    unsigned char val;
     unsigned short int valor=0;
+    char val=0;
     if (arch!=NULL){
-        fread(nombre,sizeof(char),5,arch);//lee el titulo
+        fread(nombre,sizeof(nombre),1,arch);//lee el titulo
         fread(&version,sizeof(char),1,arch);//lee la version
         fread(&val,sizeof(char),1,arch);
         valor+=val;
+        valor=(valor<<8);
         fread(&val,sizeof(char),1,arch);
-        valor=(valor<<4);
         valor+=val;
         (*mv).TablaDeDatos[0].pos=0;
         (*mv).TablaDeDatos[0].tamano=valor;
         (*mv).TablaDeDatos[1].pos=valor;
         (*mv).TablaDeDatos[1].tamano=sizeof((*mv).TablaMemoria)-valor;
-        while (!feof(arch)){
-            fread(&lec,sizeof(char),1,arch);
-            (*mv).TablaMemoria[i]=lec;//cargo el CS
-            i++;
-        }
+        if (strcmp(nombre,"VMX23")==0 && version==1)
+            while (!feof(arch)){
+                fread(&lec,sizeof(char),1,arch);
+                (*mv).TablaMemoria[i]=lec;//cargo el CS
+                i++;
+            }
         fclose(arch);
     }else{
         printf("ERROR(0): el archivo no existe");
@@ -105,6 +106,7 @@ void Lectura(MV *mv){
             Pre_Funcion(cant,op1,op2,top1,top2,operacion,mv);//con esto arracamos la parte de hacer la funcion
         else
             (*mv).TablaRegistros[5]=(*mv).TablaDeDatos[1].pos;
+       // mue(*mv);
     }
 }
 void Cant_op(char instruccion,char *top1,char *top2,short int *cant){

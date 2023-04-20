@@ -49,10 +49,11 @@ long int Valor_mem(long int op,MV mv);
 void Ultima_operacion(MV *mv,long int nz);
 void Integridad_op(long int op,MV mv);
 void Leer(char tipo,long int *tot);
-void Escribe(long int valor,char tipo);
+void Escribe(long int valor,unsigned char tipo);
 long int Suma_reg(char tipo,long int op,MV mv);
 long int Valor_reg(char tipo,long int op,MV mv);
 long int Mascara_registro(long int valor, char tipo);
+long int puntero_memo(long int op,MV mv);
 
 void Pre_Funcion(short int cant,long int op1,long int op2,char top1,char top2,char operacion,MV *mv){
     long int valor;
@@ -73,22 +74,25 @@ void Pre_Funcion(short int cant,long int op1,long int op2,char top1,char top2,ch
 }
 
 void MOV(long int op1,char top1,long int valor,MV *mv){
-    char tiporeg=op1>>4;
+    char tiporeg=(op1>>4)&0x3;
     if (top1==0){
-            for(int i=0;i<=3;i++){
-                if (((op1&0x000F0000)>>16)==1)
-                    (*mv).TablaMemoria[(*mv).TablaDeDatos[1].pos+(op1&0x0000FFFF)+i]=(((valor))>>(3-i)*8)&0x000000FF;
-                else
-                    (*mv).TablaMemoria[(*mv).TablaRegistros[((op1&0x000F0000)>>16)]+(op1&0x0000FFFF)+i]=(((valor))>>(3-i)*8);
-            }
-        }else{
-            valor=Mascara_registro(valor,tiporeg);
-            (*mv).TablaRegistros[(op1&0x0F)]=Suma_reg(tiporeg,op1,*mv);
-            (*mv).TablaRegistros[(op1&0x0F)]+=valor;
+        long int pos_memo=puntero_memo(op1,*mv);
+        for(int i=0;i<=3;i++){
+               // if (((op1&0x000F0000)>>16)==1)
+                  //  (*mv).TablaMemoria[(*mv).TablaDeDatos[1].pos+(op1&0x0000FFFF)+i]=(((valor))>>(3-i)*8)&0x000000FF;
+              //  else
+            //printf("%d ",(*mv).TablaDeDatos[reg_pointer].pos+reg_offset+offset+i);
+            (*mv).TablaMemoria[pos_memo+i]=(((valor))>>(3-i)*8);
         }
+        //printf("\n");
+    }else{
+        valor=Mascara_registro(valor,tiporeg);
+        (*mv).TablaRegistros[(op1&0x0F)]=Suma_reg(tiporeg,op1,*mv);
+        (*mv).TablaRegistros[(op1&0x0F)]+=valor;
+    }
 }
 void ADD(long int op1,char top1,long int valor,MV *mv){
-    char tiporeg=op1>>4;
+    char tiporeg=(op1>>4)&0x3;
     long int aux=0,nz=0;
     if (top1==0){
         long int valorm=Valor_mem(op1,*mv);
@@ -107,7 +111,7 @@ void ADD(long int op1,char top1,long int valor,MV *mv){
     Ultima_operacion(mv,nz);
 }
 void SUB(long int op1,char top1,long int valor,MV *mv){
-    char tiporeg=op1>>4;
+    char tiporeg=(op1>>4)&0x3;
     long int aux=0,nz=0;
     if (top1==0){
         long int valorm=Valor_mem(op1,*mv);
@@ -140,7 +144,7 @@ void SWAP(long int op1,long int op2,char top1,char top2,MV *mv){
     }
 }
 void MUL(long int op1,char top1,long int valor,MV *mv){
-    char tiporeg=op1>>4;
+    char tiporeg=(op1>>4)&0x3;
     long int aux=0,nz=0;
     if (top1==0){
         long int valorm=Valor_mem(op1,*mv);
@@ -159,7 +163,7 @@ void MUL(long int op1,char top1,long int valor,MV *mv){
     Ultima_operacion(mv,nz);
 }
 void DIV(long int op1,char top1,long int valor,MV *mv){
-    char tiporeg=op1>>4;
+    char tiporeg=(op1>>4)&0x3;
     long int aux=0,nz=0;
     if(valor!=0){
         if (top1==0){
@@ -185,12 +189,11 @@ void DIV(long int op1,char top1,long int valor,MV *mv){
     }
 }
 void CMP(long int op1,char top1,long int valor2,MV *mv){
-    char tiporeg;
     long int valor=Valor_op(op1,top1,*mv);
     Ultima_operacion(mv,valor-valor2);
 }
 void SHL(long int op1,char top1,long int valor,MV *mv){
-    char tiporeg=op1>>4;
+    char tiporeg=(op1>>4)&0x3;
     long int aux,nz=0;
     if (top1==0){
         long int valorm=Valor_mem(op1,*mv);
@@ -209,7 +212,7 @@ void SHL(long int op1,char top1,long int valor,MV *mv){
     Ultima_operacion(mv,nz);
 }
 void SHR(long int op1,char top1,long int valor,MV *mv){
-    char tiporeg;
+    char tiporeg=(op1>>4)&0x3;
     long int aux,nz=0;
     if (top1==0){
         long int valorm=Valor_mem(op1,*mv);
@@ -228,7 +231,7 @@ void SHR(long int op1,char top1,long int valor,MV *mv){
     Ultima_operacion(mv,nz);
 }
 void AND(long int op1,char top1,long int valor,MV *mv){
-    char tiporeg=op1>>4;
+    char tiporeg=(op1>>4)&0x3;
     long int aux=0,nz=0;
     if (top1==0){
         long int valorm=Valor_mem(op1,*mv);
@@ -247,7 +250,7 @@ void AND(long int op1,char top1,long int valor,MV *mv){
     Ultima_operacion(mv,nz);
 }
 void OR(long int op1,char top1,long int valor,MV *mv){
-    char tiporeg=op1>>4;
+    char tiporeg=(op1>>4)&0x3;
     long int aux=0,nz=0;
     if (top1==0){
         long int valorm=Valor_mem(op1,*mv);
@@ -266,7 +269,7 @@ void OR(long int op1,char top1,long int valor,MV *mv){
     Ultima_operacion(mv,nz);
 }
 void XOR(long int op1,char top1,long int valor,MV *mv){
-    char tiporeg;
+    char tiporeg=(op1>>4)&0x3;
     long int aux=0,nz=0;
     if (top1==0){
         long int valorm=Valor_mem(op1,*mv);
@@ -290,7 +293,11 @@ void SYS(long int op,char top,MV *mv){
     int rep,byt;
     char tipo;
     valor=Valor_op(op,top,*mv);
-    pos=(*mv).TablaRegistros[13];//EDX
+    //preparo pos en edx
+    long int regpointer=((*mv).TablaRegistros[13]&0xFFFF0000)>>16;
+    long int memo=(*mv).TablaDeDatos[regpointer].pos;
+    long int offset=((*mv).TablaRegistros[13]&0x0000FFFF);
+    pos=memo+offset;
     rep=(*mv).TablaRegistros[12]&0x000000FF;//CL
     byt=((*mv).TablaRegistros[12]&0x0000FF00)>>8;//CH
     tipo=(*mv).TablaRegistros[10]&0x000000FF;//AL
@@ -303,6 +310,7 @@ void SYS(long int op,char top,MV *mv){
                 if (j!=byt)
                     tot=tot<<8;
             }
+            Muestra_mem(pos-(*mv).TablaDeDatos[1].pos);
             Escribe(tot,tipo);
             printf("\n");
             pos+=byt;
@@ -329,30 +337,33 @@ void Leer(char tipo,long int *tot){
     if (tipo==8)
         scanf("%x",tot);
 }
-void Escribe(long int valor,char tipo){
+void Escribe(long int valor,unsigned char tipo){
+    unsigned char u;
     if (tipo==0x0F){
-        printf("%d ",valor);
+        printf("#%d ",valor);
         if (valor>=32 && valor<=254)
             printf("%c ",valor);
         else
             printf(". ");
-        printf("%o ",valor);
-        printf("%X ",valor);
+        printf("@%o ",valor);
+        printf("%%X ",valor);
     }else{
-       if (tipo==1)
-        printf("%d ",valor);
-        if (tipo==2){
+        u=tipo&0x1;
+        if (u!=0)
+            printf("#%d ",valor);
+        u=tipo&0x2;
+        if (u!=0){
             if (valor>=32 && valor<=254)
                 printf("%c ",valor);
             else
                 printf(". ");
         }
-    if (tipo==4)
-        printf("%o ",valor);
-    if (tipo==8)
-        printf("%X ",valor);
-
-
+        u=tipo&0x4;
+        if (u!=0)
+            printf("@%o ",valor);
+        u=tipo&0x8;
+        if (u!=0)
+            printf("%c%X ",'%',valor);
     }
 }
 void JMP(long int valor,MV *mv){
@@ -411,13 +422,13 @@ void NOT(long int op,char top,MV *mv){
     Ultima_operacion(mv,nz);
 }
 long int Valor_op(long int op,char top,MV mv){
-    char tiporeg;
+    long int tiporeg=op>>4;;
     long int resultado=0;
     if (top==2){
-        if (op==1)
-            resultado=mv.TablaDeDatos[1].pos;
-        else{
-            tiporeg=op>>4;
+      //  if (op==1)
+      //     resultado=mv.TablaDeDatos[1].pos;
+      // else{
+
             if (tiporeg==3)
                 resultado=(mv.TablaRegistros[(op&0x0F)]&0x0000FFFF);
             if (tiporeg==2)
@@ -426,7 +437,7 @@ long int Valor_op(long int op,char top,MV mv){
                 resultado=(mv.TablaRegistros[(op&0x0F)]&0x000000FF);
             if (tiporeg==0)
                 resultado=mv.TablaRegistros[(op&0x0F)];
-        }
+       // }
     }
     if (top==0){
        resultado=Valor_mem(op,mv);
@@ -444,26 +455,29 @@ void Ultima_operacion(MV *mv,long int nz){
 }
 long int Valor_mem(long int op,MV mv){
     long int resultado=0;
+    long int pos_memo=puntero_memo(op,mv);
     for (int i=0;i<=3;i++){
-        if (((op&0x000F0000)>>16)==1)
-            resultado+=(mv.TablaMemoria[mv.TablaDeDatos[1].pos+(op&0x0000FFFF)+i])&0x000000FF;
-        else
-            resultado+=(mv.TablaMemoria[mv.TablaRegistros[((op&0x000F0000)>>16)]+(op&0x0000FFFF)+i])&0x000000FF;
+        //if (((op&0x000F0000)>>16)==1)
+          //  resultado+=(mv.TablaMemoria[mv.TablaDeDatos[1].pos+(op&0x0000FFFF)+i])&0x000000FF;
+        //else
+        resultado+=(mv.TablaMemoria[pos_memo+i])&0x000000FF;
         if (i!=3)
             resultado=resultado<<8;
     }
     return resultado;
 }
 void Integridad_op(long int op,MV mv){
-    char pos0=mv.TablaDeDatos[1].pos,reg=((op&0x00FF0000)>>16);
-    short int valor=0,offset=(op&0x0000FFFF);
+    char pos0=mv.TablaDeDatos[1].pos;
+    short int valor=0;
+    long int offset=(op&0x0000FFFF);
+    int treg=(op&0x00FF0000)>>16;
+    long int reg=mv.TablaRegistros[treg];
+    long int reg_pointer=reg>>16;
+    long int reg_offset=reg&0x0000FFFF;
     if (reg==0){
         valor=offset;
     }else{
-        if (reg==1)
-            valor=pos0+offset;
-        else
-            valor=mv.TablaRegistros[reg]+offset;
+        valor=offset+mv.TablaDeDatos[reg_pointer].pos+reg_offset;
     }
     if (valor<pos0){
         printf("ERROR (3): estas entrando al CS");
@@ -503,4 +517,14 @@ long int Mascara_registro(long int valor, char tipo){
     if (tipo==3)
         resultado=valor&0x000FFFF;
     return resultado;
+}
+long int puntero_memo(long int op,MV mv){
+    long int offset=(op&0x0000FFFF);
+    int treg=(op&0x00FF0000)>>16;
+    long int reg=mv.TablaRegistros[treg];
+    long int reg_pointer=reg>>16;
+    long int reg_offset=reg&0x0000FFFF;
+    return mv.TablaDeDatos[reg_pointer].pos+reg_offset+offset;
+
+
 }
