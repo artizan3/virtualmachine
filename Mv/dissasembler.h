@@ -19,7 +19,7 @@ void Dissasembler_mostrar(MV mv){
     long int op1,op2;
     int corte;
     long int cont=0;
-    while (cont<=mv.TablaDeDatos[1].pos){
+    while (cont<mv.TablaDeDatos[1].pos){
         espacios=0;
         op1=0;
         op2=0;

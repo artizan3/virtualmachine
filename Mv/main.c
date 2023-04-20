@@ -32,7 +32,7 @@ void Inicia_memoria(char *dire,MV *mv){
     FILE *arch=fopen(dire,"rb");
     int i=0;
     unsigned short int valor=0;
-    char val=0;
+    unsigned char val=0;
     if (arch!=NULL){
         fread(nombre,sizeof(nombre),1,arch);//lee el titulo
         fread(&version,sizeof(char),1,arch);//lee la version
@@ -108,6 +108,11 @@ void Lectura(MV *mv){
             (*mv).TablaRegistros[5]=(*mv).TablaDeDatos[1].pos;
        // mue(*mv);
     }
+}
+void mue(MV mv){
+int pos=(mv).TablaDeDatos[1].pos;
+printf("[0] %d %d %d %d \n",(mv).TablaMemoria[pos],(mv).TablaMemoria[pos+1],(mv).TablaMemoria[pos+2],(mv).TablaMemoria[pos+3]);
+
 }
 void Cant_op(char instruccion,char *top1,char *top2,short int *cant){
     *top1=(instruccion>>6)&0x03;//haciendo el corrimiento me quedaria 00XX donde XX es el valor del operando

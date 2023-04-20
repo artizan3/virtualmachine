@@ -1,14 +1,14 @@
 # depslib dependency file v1.0
-1681950758 source:c:\users\bruno trinitario\desktop\mv\main.c
+1681956852 source:c:\users\bruno trinitario\desktop\mv\main.c
 	<stdio.h>
 	<stdlib.h>
 	"funciones.h"
 	"dissasembler.h"
 
-1681951562 c:\users\bruno trinitario\desktop\mv\funciones.h
+1681956262 c:\users\bruno trinitario\desktop\mv\funciones.h
 	<time.h>
 
-1681951489 c:\users\bruno trinitario\desktop\mv\dissasembler.h
+1681956909 c:\users\bruno trinitario\desktop\mv\dissasembler.h
 
 1681931033 source:c:\users\bruno\onedrive\desktop\mv\main.c
 	<stdio.h>

@@ -319,11 +319,12 @@ void SYS(long int op,char top,MV *mv){
     //lee por pantalla
     if (valor==1){
         for (int i=1;i<=rep;i++){
+            Muestra_mem(pos-(*mv).TablaDeDatos[1].pos);
             Leer(tipo,&tot);
             for (int j=1;j<=byt;j++){
-                (*mv).TablaMemoria[pos]=(tot>>(byt-j)*8)&0x000000FF;
-                pos+=byt;
+                (*mv).TablaMemoria[pos+j-1]=(tot>>(byt-j)*8)&0x000000FF;
             }
+            pos+=byt;
         }
     }
 }
@@ -346,7 +347,7 @@ void Escribe(long int valor,unsigned char tipo){
         else
             printf(". ");
         printf("@%o ",valor);
-        printf("%%X ",valor);
+        printf("%c%X ",'%',valor);
     }else{
         u=tipo&0x1;
         if (u!=0)
@@ -457,9 +458,6 @@ long int Valor_mem(long int op,MV mv){
     long int resultado=0;
     long int pos_memo=puntero_memo(op,mv);
     for (int i=0;i<=3;i++){
-        //if (((op&0x000F0000)>>16)==1)
-          //  resultado+=(mv.TablaMemoria[mv.TablaDeDatos[1].pos+(op&0x0000FFFF)+i])&0x000000FF;
-        //else
         resultado+=(mv.TablaMemoria[pos_memo+i])&0x000000FF;
         if (i!=3)
             resultado=resultado<<8;
