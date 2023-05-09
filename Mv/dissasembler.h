@@ -8,7 +8,7 @@ void Muestra_mem(long int ip);
 
 typedef char* nmonico;
 nmonico nmonico1[MAX]={"MOV","ADD","SUB","SWAP","MUL","DIV","CMP","SHL","SHR","AND","OR","XOR"};
-nmonico nmonico2[MAX]={"SYS","JMP","JZ","JP","JN","JNZ","JNP","JNN","LDL","LDH","RND","NOT"};
+nmonico nmonico2[MAX]={"SYS","JMP","JZ","JP","JN","JNZ","JNP","JNN","LDL","LDH","RND","NOT","PUSH","POP","CALL"};
 
 typedef char *reg_nom;
 reg_nom nombres[MAXREG]={"CS","DS",0,0,0,"IP",0,0,"CC","AC","EAX","EBX","ECX","EDX","EEX","EFX"};
@@ -48,14 +48,17 @@ void Dissasembler_mostrar(MV mv){
             }
             espacios+=corte;
         }else{
-            for (int i=1;i<=corte;i++){
-                cont++;
-                Muestra_byte(mv.TablaMemoria[cont]);
-                op1+=(mv.TablaMemoria[cont])&0x000000FF;
-                if (i!=corte)
-                    op1=op1<<8;
-            }
-            espacios+=corte;
+            if (cant==0)
+                op1=operacion;
+            else
+                for (int i=1;i<=corte;i++){
+                    cont++;
+                    Muestra_byte(mv.TablaMemoria[cont]);
+                    op1+=(mv.TablaMemoria[cont])&0x000000FF;
+                    if (i!=corte)
+                        op1=op1<<8;
+                }
+                espacios+=corte;
         }
         cont++;
         if (espacios!=7)
@@ -80,7 +83,10 @@ void Muestra_dissasembler(long int cant,long int op1,long int op2,char top1,char
         printf("%s ",nmonico2[operacion]);
     }
     if (cant==0)
-        printf("STOP");
+        if (op1==0)
+            printf("STOP");
+        else
+            printf("RET");
     Muestra_op(cant,op1,top1);
     if (cant==2){
         printf(",");

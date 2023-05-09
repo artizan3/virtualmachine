@@ -1,14 +1,19 @@
 #include<time.h>
 #define MAX 16384
 typedef struct{
-    long int pos,tamano;
+    int pos,tamano;
 }TDD;
 
 typedef struct{
     char TablaMemoria[MAX];
     long int TablaRegistros[16];
-    TDD TablaDeDatos[2];
+    TDD TablaDeDatos[8];
 }MV;
+
+//variables globales del programa final
+unsigned short int Toggle_debbug=0;
+char direVMI[50]="";
+unsigned int memory=16384;
 
 typedef void Funciones2op(long int op1,char top1,long int valor,MV *mv);
 void MOV(long int op1,char top1,long int valor,MV *mv);
@@ -36,12 +41,17 @@ void JNN(long int valor,MV *mv);
 void LDH(long int valor,MV *mv);
 void LDL(long int valor,MV *mv);
 void RND(long int valor,MV *mv);
-Func_1op_tipo2 *tipo2[]={0,JMP,JZ,JP,JN,JNZ,JNP,JNN,LDL,LDH,RND,0};
+void PUSH(long int valor,MV *mv);
+void CALL(long int valor,MV *mv);
+Func_1op_tipo2 *tipo2[]={0,JMP,JZ,JP,JN,JNZ,JNP,JNN,LDL,LDH,RND,0,PUSH,0,CALL};
 
 typedef void Func_1op_tipo1(long int op,char top,MV *mv);
 void NOT(long int op,char top,MV *mv);
 void SYS(long int op,char top,MV *mv);
-Func_1op_tipo1 *tipo1[]={SYS,0,0,0,0,0,0,0,0,0,0,NOT};
+void POP(long int op,char top,MV *mv);
+Func_1op_tipo1 *tipo1[]={SYS,0,0,0,0,0,0,0,0,0,0,NOT,0,POP};
+
+void RET(MV *mv);
 
 void Pre_Funcion(short int cant,long int op1,long int op2,char top1,char top2,char operacion,MV *mv);
 long int Valor_op(long int op,char top,MV mv);
@@ -50,10 +60,13 @@ void Ultima_operacion(MV *mv,long int nz);
 void Integridad_op(long int op,MV mv);
 void Leer(char tipo,long int *tot);
 void Escribe(long int valor,unsigned char tipo,int tamano);
+void EscribeString(char *palabra,unsigned int tamanostr,long int pos,MV *mv);
+void LeeString(unsigned int tamanostr,long int pos,MV *mv);
 long int Suma_reg(char tipo,long int op,MV mv);
 long int Valor_reg(char tipo,long int op,MV mv);
 long int Mascara_registro(long int valor, char tipo);
 long int puntero_memo(long int op,MV mv);
+unsigned short int celdas_memo(long int op);
 
 void Pre_Funcion(short int cant,long int op1,long int op2,char top1,char top2,char operacion,MV *mv){
     long int valor;
@@ -64,12 +77,14 @@ void Pre_Funcion(short int cant,long int op1,long int op2,char top1,char top2,ch
         }else
             SWAP(op1,op2,top1,top2,mv);
     }else{
-        if (operacion<=10 && operacion>=1){
-            valor=Valor_op(op1,top1,*mv);
-            tipo2[operacion](valor,mv);
-        }
+        if (cant==0)
+            RET(mv);
         else
-           tipo1[operacion](op1,top1,mv);
+            if (operacion<=10 && operacion>=1 || operacion==12 || operacion==14){
+                valor=Valor_op(op1,top1,*mv);
+                tipo2[operacion](valor,mv);
+            }else
+                tipo1[operacion](op1,top1,mv);
     }
 }
 
@@ -77,14 +92,10 @@ void MOV(long int op1,char top1,long int valor,MV *mv){
     char tiporeg=(op1>>4)&0x3;
     if (top1==0){
         long int pos_memo=puntero_memo(op1,*mv);
-        for(int i=0;i<=3;i++){
-               // if (((op1&0x000F0000)>>16)==1)
-                  //  (*mv).TablaMemoria[(*mv).TablaDeDatos[1].pos+(op1&0x0000FFFF)+i]=(((valor))>>(3-i)*8)&0x000000FF;
-              //  else
-            //printf("%d ",(*mv).TablaDeDatos[reg_pointer].pos+reg_offset+offset+i);
-            (*mv).TablaMemoria[pos_memo+i]=(((valor))>>(3-i)*8);
+        unsigned short int cant=celdas_memo(op1);
+        for(int i=cant-1;i>=0;i--){
+            (*mv).TablaMemoria[pos_memo+i]=(((valor))>>(cant-1-i)*8);
         }
-        //printf("\n");
     }else{
         valor=Mascara_registro(valor,tiporeg);
         (*mv).TablaRegistros[(op1&0x0F)]=Suma_reg(tiporeg,op1,*mv);
@@ -292,6 +303,7 @@ void SYS(long int op,char top,MV *mv){
     long int valor,pos,tot;
     int rep,byt;
     char tipo;
+    unsigned int tamanostr;
     valor=Valor_op(op,top,*mv);
     //preparo pos en edx
     long int regpointer=((*mv).TablaRegistros[13]&0xFFFF0000)>>16;
@@ -301,6 +313,7 @@ void SYS(long int op,char top,MV *mv){
     rep=(*mv).TablaRegistros[12]&0x000000FF;//CL
     byt=((*mv).TablaRegistros[12]&0x0000FF00)>>8;//CH
     tipo=(*mv).TablaRegistros[10]&0x000000FF;//AL
+    tamanostr=(*mv).TablaRegistros[12]&0x0000FFFF;//CX
     //escribe por pantalla
     if (valor==2){
         for(int i=1;i<=rep;i++){
@@ -327,6 +340,19 @@ void SYS(long int op,char top,MV *mv){
             pos+=byt;
         }
     }
+    if (valor==3){
+        char palabra[1600];
+        gets(palabra);
+        fflush(stdin);
+        EscribeString(palabra,tamanostr,pos,mv);
+    }
+    if (valor==4){
+        LeeString(tamanostr,pos,mv);
+    }
+    if (valor==7)
+        system("clear");
+    if (valor==0xF && strcmp(direVMI,"")!=0)
+        Toggle_debbug=1;
 }
 void Leer(char tipo,long int *tot){
     if (tipo==1)
@@ -364,6 +390,28 @@ void Escribe(long int valor,unsigned char tipo,int tamano){
         if (u!=0)
             printf("%c%X ",'%',valor);
     }
+void EscribeString(char *palabra,unsigned int tamanostr,long int pos,MV *mv){
+    int i=0;
+    while (i<strlen(palabra) && i!=tamanostr){
+        (*mv).TablaMemoria[pos+i]=palabra[i];
+        i++;
+    }
+    if (i==tamanostr)
+        (*mv).TablaMemoria[pos+i]=0x00;
+    else
+        (*mv).TablaMemoria[pos+i+1]=0x00;
+}
+void LeeString(unsigned int tamanostr,long int pos,MV *mv){
+    int i=0;
+    while ((*mv).TablaMemoria[pos+i]!=00 && i!=tamanostr){
+        if ((*mv).TablaMemoria[pos+i]=='/' && (*mv).TablaMemoria[pos+i+1]=='n'){
+            i++;
+            printf("/n");
+        }else
+            printf("%c",(*mv).TablaMemoria[pos+i]);
+        i++;
+    }
+}
 void JMP(long int valor,MV *mv){
     (*mv).TablaRegistros[5]=valor;
 }
@@ -419,6 +467,37 @@ void NOT(long int op,char top,MV *mv){
     }
     Ultima_operacion(mv,nz);
 }
+void PUSH(long int valor,MV *mv){
+    if ((*mv).TablaRegistros[6]-4<(*mv).TablaDeDatos[((*mv).TablaRegistros[4]&0xFFFF0000)>>16].pos){
+        printf("ERROR(5): Stack overflow error");
+        exit(-1);
+    }
+    for (int i=0;i<=3;i++){
+        (*mv).TablaRegistros[6]-=1;
+        (*mv).TablaMemoria[(*mv).TablaRegistros[6]]=(valor>>(i*8));
+    }
+}
+void POP(long int op,char top,MV *mv){
+    long int aux=0;
+    if ((*mv).TablaRegistros[6]+4>(*mv).TablaDeDatos[((*mv).TablaRegistros[4]&0xFFFF0000)>>16].tamano){
+        printf("ERROR(6): Stack underflow error");
+        exit(-1);
+    }
+    for (int i=0;i<=3;i++){
+        aux+=(*mv).TablaMemoria[(*mv).TablaRegistros[6]];
+        if (i!=3)
+            aux=aux<<8;
+        (*mv).TablaRegistros[6]+=1;
+    }
+    MOV(op,top,aux,mv);
+}
+void CALL(long int valor,MV *mv){
+    PUSH((*mv).TablaRegistros[5],mv);
+    JMP(valor,mv);
+}
+void RET(MV *mv){
+    POP(0x05,2,mv);
+}
 long int Valor_op(long int op,char top,MV mv){
     long int tiporeg=op>>4;;
     long int resultado=0;
@@ -436,17 +515,18 @@ long int Valor_op(long int op,char top,MV mv){
        resultado=Valor_mem(op,mv);
     }
     if (top==1){
-        op=(short int)op;
-        resultado=(op);
+        //op=(short int)op;
+        resultado=(short int)op;
     }
     return (resultado);
 }
 long int Valor_mem(long int op,MV mv){
     long int resultado=0;
     long int pos_memo=puntero_memo(op,mv);
-    for (int i=0;i<=3;i++){
+    unsigned short int cant=celdas_memo(op);
+    for (int i=0;i<cant;i++){
         resultado+=(mv.TablaMemoria[pos_memo+i])&0x000000FF;
-        if (i!=3)
+        if (i!=cant-1)
             resultado=resultado<<8;
     }
     return resultado;
@@ -517,6 +597,11 @@ long int puntero_memo(long int op,MV mv){
     long int reg_pointer=reg>>16;
     long int reg_offset=reg&0x0000FFFF;
     return mv.TablaDeDatos[reg_pointer].pos+reg_offset+offset;
-
-
+}
+unsigned short int celdas_memo(long int op){
+    unsigned long int aux=op&(0x00C00000);
+    unsigned short int aux2=aux>>20;
+    aux2^=0x3;
+    aux2++;
+    return aux2;
 }
