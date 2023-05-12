@@ -92,9 +92,9 @@ void MOV(long int op1,char top1,long int valor,MV *mv){
     char tiporeg=(op1>>4)&0x3;
     if (top1==0){
         long int pos_memo=puntero_memo(op1,*mv);
-        unsigned short int cant=celdas_memo(op1);
-        for(int i=cant-1;i>=0;i--){
-            (*mv).TablaMemoria[pos_memo+i]=(((valor))>>(cant-1-i)*8);
+        unsigned short int cant=celdas_memo(op1)-1;
+        for(int i=cant;i>=0;i--){
+            (*mv).TablaMemoria[pos_memo+i]=(((valor))>>(cant-i)*8);
         }
     }else{
         valor=Mascara_registro(valor,tiporeg);
@@ -306,14 +306,16 @@ void SYS(long int op,char top,MV *mv){
     unsigned int tamanostr;
     valor=Valor_op(op,top,*mv);
     //preparo pos en edx
-    long int regpointer=((*mv).TablaRegistros[13]&0xFFFF0000)>>16;
-    long int memo=(*mv).TablaDeDatos[regpointer].pos;
-    long int offset=((*mv).TablaRegistros[13]&0x0000FFFF);
-    pos=memo+offset;
-    rep=(*mv).TablaRegistros[12]&0x000000FF;//CL
-    byt=((*mv).TablaRegistros[12]&0x0000FF00)>>8;//CH
-    tipo=(*mv).TablaRegistros[10]&0x000000FF;//AL
-    tamanostr=(*mv).TablaRegistros[12]&0x0000FFFF;//CX
+    if (valor!=0xF && valor!=7){
+        long int regpointer=((*mv).TablaRegistros[13]&0xFFFF0000)>>16;
+        long int memo=(*mv).TablaDeDatos[regpointer].pos;
+        long int offset=((*mv).TablaRegistros[13]&0x0000FFFF);
+        pos=memo+offset;
+        rep=(*mv).TablaRegistros[12]&0x000000FF;//CL
+        byt=((*mv).TablaRegistros[12]&0x0000FF00)>>8;//CH
+        tipo=(*mv).TablaRegistros[10]&0x000000FF;//AL
+        tamanostr=(*mv).TablaRegistros[12]&0x0000FFFF;//CX
+    }
     //escribe por pantalla
     if (valor==2){
         for(int i=1;i<=rep;i++){
@@ -403,7 +405,7 @@ void EscribeString(char *palabra,unsigned int tamanostr,long int pos,MV *mv){
 }
 void LeeString(unsigned int tamanostr,long int pos,MV *mv){
     int i=0;
-    while ((*mv).TablaMemoria[pos+i]!=00 && i!=tamanostr){
+    while ((*mv).TablaMemoria[pos+i]!=0x00 && i!=tamanostr){
         if ((*mv).TablaMemoria[pos+i]=='/' && (*mv).TablaMemoria[pos+i+1]=='n'){
             i++;
             printf("/n");
@@ -468,27 +470,37 @@ void NOT(long int op,char top,MV *mv){
     Ultima_operacion(mv,nz);
 }
 void PUSH(long int valor,MV *mv){
-    if ((*mv).TablaRegistros[6]-4<(*mv).TablaDeDatos[((*mv).TablaRegistros[4]&0xFFFF0000)>>16].pos){
+    int ss_pointer=(((*mv).TablaRegistros[6]&0xFFFF0000)>>16);
+    int sp_offset=(*mv).TablaRegistros[6]&0x0000FFFF;
+    int pos_ss=(*mv).TablaDeDatos[ss_pointer].pos;
+    if (sp_offset-4<0){
         printf("ERROR(5): Stack overflow error");
         exit(-1);
     }
     for (int i=0;i<=3;i++){
-        (*mv).TablaRegistros[6]-=1;
-        (*mv).TablaMemoria[(*mv).TablaRegistros[6]]=(valor>>(i*8));
+        sp_offset-=1;
+        (*mv).TablaMemoria[pos_ss+sp_offset]=(valor>>(i*8));
     }
+    (*mv).TablaRegistros[6]=(*mv).TablaRegistros[6]&0xFFFF0000;
+    (*mv).TablaRegistros[6]+=sp_offset;
 }
 void POP(long int op,char top,MV *mv){
     long int aux=0;
-    if ((*mv).TablaRegistros[6]+4>(*mv).TablaDeDatos[((*mv).TablaRegistros[4]&0xFFFF0000)>>16].tamano){
+    int ss_pointer=(((*mv).TablaRegistros[4]&0xFFFF0000)>>16);
+    int sp_offset=(*mv).TablaRegistros[6]&0x0000FFFF;
+    int pos_ss=(*mv).TablaDeDatos[ss_pointer].pos;
+    if (sp_offset+4>(*mv).TablaDeDatos[ss_pointer].tamano){
         printf("ERROR(6): Stack underflow error");
         exit(-1);
     }
     for (int i=0;i<=3;i++){
-        aux+=(*mv).TablaMemoria[(*mv).TablaRegistros[6]];
+        aux+=((*mv).TablaMemoria[pos_ss+sp_offset])&0xFF;
         if (i!=3)
             aux=aux<<8;
-        (*mv).TablaRegistros[6]+=1;
+        sp_offset+=1;
     }
+    (*mv).TablaRegistros[6]=(*mv).TablaRegistros[6]&0xFFFF0000;
+    (*mv).TablaRegistros[6]+=sp_offset;
     MOV(op,top,aux,mv);
 }
 void CALL(long int valor,MV *mv){
@@ -539,20 +551,24 @@ void Ultima_operacion(MV *mv,long int nz){
         (*mv).TablaRegistros[8]=0x80000000;
 }
 void Integridad_op(long int op,MV mv){
-    char pos0=mv.TablaDeDatos[1].pos;
-    short int valor=0;
+    int valor=0;
     long int offset=(op&0x0000FFFF);
     int treg=(op&0x00FF0000)>>16;
     long int reg=mv.TablaRegistros[treg];
-    long int reg_pointer=reg>>16;
+    long int reg_pointer=(reg>>16)&0x1;
     long int reg_offset=reg&0x0000FFFF;
+    int pos0=mv.TablaDeDatos[reg_pointer].tamano;
     if (reg==0){
         valor=offset;
+        if (valor<pos0){
+            printf("ERROR (3): Segmentation fault");
+            exit(-1);
+        }
     }else{
-        valor=offset+mv.TablaDeDatos[reg_pointer].pos+reg_offset;
+        valor=offset+reg_offset;
     }
-    if (valor<pos0){
-        printf("ERROR (3): estas entrando al CS");
+    if (valor>pos0){
+        printf("ERROR (3): Segmentation fault");
         exit(-1);
     }
 }

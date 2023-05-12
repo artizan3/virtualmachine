@@ -18,6 +18,7 @@ int main(int argc,char *argv[])
     Lectura_argumentos(argc,argv,&diss,&memory,direVMI);
     Inicia_registro(&mv);
     Inicia_memoria(argv[1],&mv,memory);
+    diss=1;//BORRAR ESTO
     if(diss==1)
         Dissasembler_mostrar(mv);
     Lectura(&mv);
@@ -33,7 +34,7 @@ void Inicia_registro(MV *mv){
 
 void Inicia_memoria(char *dire,MV *mv,unsigned int memory){
     char version,lec,nombre[5];
-    FILE *arch=fopen(dire,"rb");
+    FILE *arch=fopen("listas_main.vmx","rb");
     int i=0;
     unsigned short int valor=0;
     unsigned char val=0;
@@ -41,12 +42,13 @@ void Inicia_memoria(char *dire,MV *mv,unsigned int memory){
         fread(nombre,sizeof(nombre),1,arch);//lee el titulo
         fread(&version,sizeof(char),1,arch);//lee la version
         if (version==2){
-            unsigned short int vec[5]={0,0,0,0,0};
+            unsigned int vec[6];
             for (int j=0;j<5;j++){
+                valor=0;
                 fread(&val,sizeof(char),1,arch);
                 valor+=val;
-                valor=(valor<<8);
                 fread(&val,sizeof(char),1,arch);
+                valor=valor<<8;
                 valor+=val;
                 vec[j]=valor;
             }
@@ -75,7 +77,8 @@ void Inicia_memoria(char *dire,MV *mv,unsigned int memory){
 }
 
 void Lectura(MV *mv){
-    char top1,top2,operacion;
+    char top1,top2;
+    unsigned char operacion;
     short int cant;
     long int op1,op2;
     int corte;
@@ -84,7 +87,7 @@ void Lectura(MV *mv){
     {
         op1=0;
         op2=0;
-        operacion=(*mv).TablaMemoria[(*mv).TablaRegistros[5]]&0x0F;
+        operacion=(*mv).TablaMemoria[(*mv).TablaRegistros[5]]&0xF;
         Cant_op((*mv).TablaMemoria[(*mv).TablaRegistros[5]],&top1,&top2,&cant);
         corte=top1^0x3;//le asigno el opuesto del tipo1 el cual representa la longitud
         if (cant==2){
@@ -123,9 +126,10 @@ void Lectura(MV *mv){
                 if (dbg=='q')
                     Toggle_debbug=0;
                 Pre_Funcion(cant,op1,op2,top1,top2,operacion,mv);
-                IMG_debug(*mv);
             }else
                 Pre_Funcion(cant,op1,op2,top1,top2,operacion,mv);//con esto arracamos la parte de hacer la funcion
+            if (strcmp(direVMI,"")!=0)
+                 IMG_debug(*mv);
         }
     }
 }
@@ -157,27 +161,30 @@ void Lectura_argumentos(int argc,char *argv[],short int *diss,unsigned int *memo
         }
     }
 }
-void SeteoV2(MV *mv,unsigned short int vec[],unsigned int memory){
-    unsigned short int total=0,aux=0;
+void SeteoV2(MV *mv,unsigned int vec[],unsigned int memory){
+    unsigned int aux=0;
     int c=0;
-    for (int i=0;i<=4;i++){
+    int i=0;
+    for (i;i<=4;i++){
         if (vec[i]>0){
-            total+=vec[i];
-            if (total>memory){
+            if (aux>memory){
                 printf("ERROR(4): los segmentos ocupan mas de la memoria disponible");
                 exit(-1);
             }
             if (i==1)
-                (*mv).TablaRegistros[2]==c<<16;
+                (*mv).TablaRegistros[2]=c<<16;
             if (i==2)
-                (*mv).TablaRegistros[1]==c<<16;
-            if (i>2)
-                (*mv).TablaRegistros[i]==c<<16;
-            if (i==4)
-                (*mv).TablaRegistros[6]=aux+vec[i];
+                (*mv).TablaRegistros[1]=c<<16;
+            if (i==3)
+                (*mv).TablaRegistros[3]=c<<16;
+            if (i==4){
+                (*mv).TablaRegistros[4]=c<<16;
+                (*mv).TablaRegistros[6]=c<<16;
+                (*mv).TablaRegistros[6]+=vec[i];
+            }
             (*mv).TablaDeDatos[c].pos=aux;
             (*mv).TablaDeDatos[c].tamano=vec[i];
-            aux=vec[i];
+            aux+=vec[i];
             c++;
         }
     }
@@ -189,25 +196,30 @@ void IMG_debug(MV mv){
         return 0;
     }
     char pal[5]="VMI23";
+    char aux;
     //header
     fwrite(pal,sizeof(pal),1,arch);
-    fwrite(1,sizeof(char),1,arch);
-    fwrite(16384,sizeof(int),1,arch);
+    aux=0x1;
+    fwrite(&aux,sizeof(char),1,arch);
+    int mem=16384;
+    fwrite(&mem,sizeof(int),1,arch);
     //registros
+    long int aux2;
     for (int i=0;i<=15;i++){
-        fwrite(mv.TablaRegistros[i],sizeof(long int),1,arch);
+        aux2=mv.TablaRegistros[i];
+        fwrite(&aux2,sizeof(long int),1,arch);
     }
     //TDS
-    long int aux=0;
+    aux2=0;
     for (int i=0;i<=7;i++){
         aux=0;
         aux=mv.TablaDeDatos[i].tamano;
         aux=aux<<16;
         aux+=mv.TablaDeDatos[i].pos;
-        fwrite(aux,sizeof(long int),1,arch);
+        fwrite(&aux2,sizeof(long int),1,arch);
     }
     //memoria dinamica
-    fwrite(memory,sizeof(memory),1,arch);
+    fwrite(&memory,sizeof(memory),1,arch);
     fclose(arch);
 }
 void chequeo_errores(char top1,char top2,short int cant,char operacion,long int op1,long int op2,MV mv){
@@ -216,7 +228,6 @@ void chequeo_errores(char top1,char top2,short int cant,char operacion,long int 
     if (top2==0)
         Integridad_op(op2,mv);
     }
-    //RE HACER LA FUNCION INTEGRIDAD OP!!!!!!!!
     if (cant==2 && (operacion<0 || operacion>12)){
         printf("ERROR(1): el codigo de operacion no existe");
         exit(-1);

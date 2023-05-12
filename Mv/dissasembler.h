@@ -1,4 +1,4 @@
-#define MAX 13
+#define MAX 15
 #define MAXREG 16
 void Dissasembler_mostrar(MV mv);
 void Muesta_dissasembler(long int cant,long int op1,long int op2,char top1,char top2,char operacion);
@@ -11,7 +11,7 @@ nmonico nmonico1[MAX]={"MOV","ADD","SUB","SWAP","MUL","DIV","CMP","SHL","SHR","A
 nmonico nmonico2[MAX]={"SYS","JMP","JZ","JP","JN","JNZ","JNP","JNN","LDL","LDH","RND","NOT","PUSH","POP","CALL"};
 
 typedef char *reg_nom;
-reg_nom nombres[MAXREG]={"CS","DS",0,0,0,"IP",0,0,"CC","AC","EAX","EBX","ECX","EDX","EEX","EFX"};
+reg_nom nombres[MAXREG]={"CS","DS","KS","ES","SS","IP","SP","BP","CC","AC","EAX","EBX","ECX","EDX","EEX","EFX"};
 
 void Dissasembler_mostrar(MV mv){
     char top1,top2,operacion;
@@ -23,7 +23,7 @@ void Dissasembler_mostrar(MV mv){
         espacios=0;
         op1=0;
         op2=0;
-        operacion=mv.TablaMemoria[cont]&0x0F;
+        operacion=mv.TablaMemoria[cont]&0xF;
         Muestra_mem(cont);
         Muestra_byte(mv.TablaMemoria[cont]);
         espacios++;
