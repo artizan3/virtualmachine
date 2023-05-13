@@ -18,7 +18,6 @@ int main(int argc,char *argv[])
     Lectura_argumentos(argc,argv,&diss,&memory,direVMI);
     Inicia_registro(&mv);
     Inicia_memoria(argv[1],&mv,memory);
-    diss=1;//BORRAR ESTO
     if(diss==1)
         Dissasembler_mostrar(mv);
     Lectura(&mv);
@@ -34,7 +33,7 @@ void Inicia_registro(MV *mv){
 
 void Inicia_memoria(char *dire,MV *mv,unsigned int memory){
     char version,lec,nombre[5];
-    FILE *arch=fopen("listas_main.vmx","rb");
+    FILE *arch=fopen(dire,"rb");
     int i=0;
     unsigned short int valor=0;
     unsigned char val=0;

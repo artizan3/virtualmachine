@@ -99,10 +99,18 @@ void Muestra_op(long int cant,long int op,char top){
     if (top==1)
         printf("%X",op);
     if (top==0){
+        short int offset=op;
+        char tipo_mem=op>>22;
+        if (tipo_mem==0)
+            printf("l");
+        if (tipo_mem==2)
+            printf("w");
+        if (tipo_mem==3)
+            printf("b");
         if (((op&0x000F0000)>>16)==1)
-            printf("[%d]",op&0x0000FFFF);
+            printf("[%d]",offset);
         else
-            printf("[%s+%d]",nombres[op>>16],op&0x0000FFFF);
+            printf("[%s+%d]",nombres[op>>16],offset);
     }
     if (top==2){
         tiporeg=(op>>4)&0x3;

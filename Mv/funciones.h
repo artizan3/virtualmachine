@@ -552,25 +552,17 @@ void Ultima_operacion(MV *mv,long int nz){
 }
 void Integridad_op(long int op,MV mv){
     int valor=0;
-    long int offset=(op&0x0000FFFF);
+    short int offset=op;
     int treg=(op&0x00FF0000)>>16;
     long int reg=mv.TablaRegistros[treg];
     long int reg_pointer=(reg>>16)&0x1;
-    long int reg_offset=reg&0x0000FFFF;
+    short int reg_offset=reg;
     int pos0=mv.TablaDeDatos[reg_pointer].tamano;
-    if (reg==0){
-        valor=offset;
-        if (valor<pos0){
+        valor=offset+reg_offset;
+        if (valor>pos0 || valor<0){
             printf("ERROR (3): Segmentation fault");
             exit(-1);
         }
-    }else{
-        valor=offset+reg_offset;
-    }
-    if (valor>pos0){
-        printf("ERROR (3): Segmentation fault");
-        exit(-1);
-    }
 }
 long int Valor_reg(char tipo,long int op,MV mv){
     long int resultado=0;
@@ -607,11 +599,11 @@ long int Mascara_registro(long int valor, char tipo){
     return resultado;
 }
 long int puntero_memo(long int op,MV mv){
-    long int offset=(op&0x0000FFFF);
+    short int offset=op;
     int treg=(op&0x00FF0000)>>16;
     long int reg=mv.TablaRegistros[treg];
     long int reg_pointer=reg>>16;
-    long int reg_offset=reg&0x0000FFFF;
+    short int reg_offset=reg;
     return mv.TablaDeDatos[reg_pointer].pos+reg_offset+offset;
 }
 unsigned short int celdas_memo(long int op){
