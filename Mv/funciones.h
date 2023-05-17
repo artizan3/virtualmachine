@@ -1,7 +1,7 @@
 #include<time.h>
 #define MAX 16384
 typedef struct{
-    int pos,tamano;
+    short int pos,tamano;
 }TDD;
 
 typedef struct{
@@ -306,7 +306,6 @@ void SYS(long int op,char top,MV *mv){
     unsigned int tamanostr;
     valor=Valor_op(op,top,*mv);
     //preparo pos en edx
-    if (valor!=0xF && valor!=7){
         long int regpointer=((*mv).TablaRegistros[13]&0xFFFF0000)>>16;
         long int memo=(*mv).TablaDeDatos[regpointer].pos;
         long int offset=((*mv).TablaRegistros[13]&0x0000FFFF);
@@ -315,7 +314,6 @@ void SYS(long int op,char top,MV *mv){
         byt=((*mv).TablaRegistros[12]&0x0000FF00)>>8;//CH
         tipo=(*mv).TablaRegistros[10]&0x000000FF;//AL
         tamanostr=(*mv).TablaRegistros[12]&0x0000FFFF;//CX
-    }
     //escribe por pantalla
     if (valor==2){
         for(int i=1;i<=rep;i++){
@@ -325,7 +323,8 @@ void SYS(long int op,char top,MV *mv){
                 if (j!=byt)
                     tot=tot<<8;
             }
-            Muestra_mem(pos-(*mv).TablaDeDatos[1].pos);
+            //Muestra_mem(pos-(*mv).TablaDeDatos[1].pos);
+            Muestra_mem(pos-memo);
             Escribe(tot,tipo,byt);
             printf("\n");
             pos+=byt;
@@ -334,7 +333,8 @@ void SYS(long int op,char top,MV *mv){
     //lee por pantalla
     if (valor==1){
         for (int i=1;i<=rep;i++){
-            Muestra_mem(pos-(*mv).TablaDeDatos[1].pos);
+           //Muestra_mem(pos-(*mv).TablaDeDatos[1].pos);
+            Muestra_mem(pos-memo);
             Leer(tipo,&tot);
             for (int j=1;j<=byt;j++){
                 (*mv).TablaMemoria[pos+j-1]=(tot>>(byt-j)*8)&0x000000FF;
@@ -527,7 +527,6 @@ long int Valor_op(long int op,char top,MV mv){
        resultado=Valor_mem(op,mv);
     }
     if (top==1){
-        //op=(short int)op;
         resultado=(short int)op;
     }
     return (resultado);
@@ -541,7 +540,13 @@ long int Valor_mem(long int op,MV mv){
         if (i!=cant-1)
             resultado=resultado<<8;
     }
+    long int aux=resultado;
+    if (cant==1)
+        resultado=(char)aux;
+    if (cant==2)
+        resultado=(short int)aux;
     return resultado;
+
 }
 void Ultima_operacion(MV *mv,long int nz){
     (*mv).TablaRegistros[8]=0;
@@ -558,8 +563,9 @@ void Integridad_op(long int op,MV mv){
     long int reg_pointer=(reg>>16)&0x1;
     short int reg_offset=reg;
     int pos0=mv.TablaDeDatos[reg_pointer].tamano;
+    int pos1=mv.TablaDeDatos[reg_pointer].pos;
         valor=offset+reg_offset;
-        if (valor>pos0 || valor<0){
+        if (valor>pos0 || pos0+valor<0 || pos1+valor<pos1){
             printf("ERROR (3): Segmentation fault");
             exit(-1);
         }
@@ -599,17 +605,17 @@ long int Mascara_registro(long int valor, char tipo){
     return resultado;
 }
 long int puntero_memo(long int op,MV mv){
-    short int offset=op;
-    int treg=(op&0x00FF0000)>>16;
+    short int offset=(op&0x0000FFFF);
+    int treg=(op&0x000F0000)>>16;
     long int reg=mv.TablaRegistros[treg];
     long int reg_pointer=reg>>16;
-    short int reg_offset=reg;
+    short int reg_offset=(reg&0x0000FFFF);
     return mv.TablaDeDatos[reg_pointer].pos+reg_offset+offset;
 }
 unsigned short int celdas_memo(long int op){
     unsigned long int aux=op&(0x00C00000);
-    unsigned short int aux2=aux>>20;
-    aux2^=0x3;
+    unsigned int aux2=aux>>22;
+    aux2=aux2^0x3;
     aux2++;
     return aux2;
 }

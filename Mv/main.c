@@ -132,6 +132,7 @@ void Lectura(MV *mv){
         }
     }
 }
+
 void Cant_op(char instruccion,char *top1,char *top2,short int *cant){
     *top1=(instruccion>>6)&0x03;//haciendo el corrimiento me quedaria 00XX donde XX es el valor del operando
     *top2=(instruccion>>4)&0x03;//haciendo la operacion tambien quedaria 00XX.
@@ -185,7 +186,8 @@ void SeteoV2(MV *mv,unsigned int vec[],unsigned int memory){
             (*mv).TablaDeDatos[c].tamano=vec[i];
             aux+=vec[i];
             c++;
-        }
+        }//else
+         //   (*mv).TablaRegistros[i]=-1;
     }
 }
 void IMG_debug(MV mv){
@@ -194,31 +196,39 @@ void IMG_debug(MV mv){
         printf("ERROR no se pudo abrir el archivo binario");
         return 0;
     }
-    char pal[5]="VMI23";
-    char aux;
-    //header
-    fwrite(pal,sizeof(pal),1,arch);
-    aux=0x1;
-    fwrite(&aux,sizeof(char),1,arch);
-    int mem=16384;
-    fwrite(&mem,sizeof(int),1,arch);
-    //registros
-    long int aux2;
+    long int TD;
+    char vec[106];
+    int j;
+    vec[0]='V';
+    vec[1]='M';
+    vec[2]='I';
+    vec[3]='2';
+    vec[4]='3';
+    vec[5]=1;
+    vec[6]=0x40;
+    vec[7]=0x0;
+    j=8;
     for (int i=0;i<=15;i++){
-        aux2=mv.TablaRegistros[i];
-        fwrite(&aux2,sizeof(long int),1,arch);
+        for (int k=3;k>=0;k--){
+            vec[j]=(mv.TablaRegistros[i])>>(k)*8;
+            j++;
+        }
     }
-    //TDS
-    aux2=0;
     for (int i=0;i<=7;i++){
-        aux=0;
-        aux=mv.TablaDeDatos[i].tamano;
-        aux=aux<<16;
-        aux+=mv.TablaDeDatos[i].pos;
-        fwrite(&aux2,sizeof(long int),1,arch);
+        TD=0;
+        TD=mv.TablaDeDatos[i].pos;
+        TD=TD<<16;
+        TD+=mv.TablaDeDatos[i].tamano;
+        for (int k=3;k>=0;k--){
+            vec[j]=(TD>>(k)*8);
+            j++;
+        }
     }
-    //memoria dinamica
-    fwrite(&memory,sizeof(memory),1,arch);
+    for (int k=1;k>=0;k--){
+            vec[j]=(memory>>(k)*8);
+            j++;
+    }
+    fwrite(vec,sizeof(vec),1,arch);
     fclose(arch);
 }
 void chequeo_errores(char top1,char top2,short int cant,char operacion,long int op1,long int op2,MV mv){

@@ -1,10 +1,11 @@
 #define MAX 15
 #define MAXREG 16
-void Dissasembler_mostrar(MV mv);
+
+void Muestra_mem(long int ip);
 void Muesta_dissasembler(long int cant,long int op1,long int op2,char top1,char top2,char operacion);
 void Muestra_op(long int cant,long int op,char top);
 void Muestra_byte(char valor);
-void Muestra_mem(long int ip);
+void Dissasembler_mostrar(MV mv);
 
 typedef char* nmonico;
 nmonico nmonico1[MAX]={"MOV","ADD","SUB","SWAP","MUL","DIV","CMP","SHL","SHR","AND","OR","XOR"};
@@ -109,8 +110,10 @@ void Muestra_op(long int cant,long int op,char top){
             printf("b");
         if (((op&0x000F0000)>>16)==1)
             printf("[%d]",offset);
-        else
-            printf("[%s+%d]",nombres[op>>16],offset);
+        else{
+            char reg=(op>>16)&0x0F;
+            printf("[%s+%d]",nombres[reg],offset);
+        }
     }
     if (top==2){
         tiporeg=(op>>4)&0x3;
