@@ -406,11 +406,7 @@ void EscribeString(char *palabra,unsigned int tamanostr,long int pos,MV *mv){
 void LeeString(unsigned int tamanostr,long int pos,MV *mv){
     int i=0;
     while ((*mv).TablaMemoria[pos+i]!=0x00 && i!=tamanostr){
-        if ((*mv).TablaMemoria[pos+i]=='/' && (*mv).TablaMemoria[pos+i+1]=='n'){
-            i++;
-            printf("/n");
-        }else
-            printf("%c",(*mv).TablaMemoria[pos+i]);
+        printf("%c",(*mv).TablaMemoria[pos+i]);
         i++;
     }
 }

@@ -186,7 +186,14 @@ void SeteoV2(MV *mv,unsigned int vec[],unsigned int memory){
             (*mv).TablaDeDatos[c].tamano=vec[i];
             aux+=vec[i];
             c++;
-        }//else
+        }else{
+            if (i==1)
+                (*mv).TablaRegistros[2]=-1;
+            if (i==2)
+                (*mv).TablaRegistros[1]=-1;
+            if (i>2)
+                (*mv).TablaRegistros[i]=-1;
+        }
          //   (*mv).TablaRegistros[i]=-1;
     }
 }
@@ -194,41 +201,41 @@ void IMG_debug(MV mv){
     FILE *arch=fopen(direVMI,"wb");
     if (arch==NULL){
         printf("ERROR no se pudo abrir el archivo binario");
-        return 0;
-    }
-    long int TD;
-    char vec[106];
-    int j;
-    vec[0]='V';
-    vec[1]='M';
-    vec[2]='I';
-    vec[3]='2';
-    vec[4]='3';
-    vec[5]=1;
-    vec[6]=0x40;
-    vec[7]=0x0;
-    j=8;
-    for (int i=0;i<=15;i++){
-        for (int k=3;k>=0;k--){
-            vec[j]=(mv.TablaRegistros[i])>>(k)*8;
-            j++;
+    }else{
+        long int TD;
+        char vec[106];
+        int j;
+        vec[0]='V';
+        vec[1]='M';
+        vec[2]='I';
+        vec[3]='2';
+        vec[4]='3';
+        vec[5]=1;
+        vec[6]=0x40;
+        vec[7]=0x0;
+        j=8;
+        for (int i=0;i<=15;i++){
+            for (int k=3;k>=0;k--){
+                vec[j]=(mv.TablaRegistros[i])>>(k)*8;
+                j++;
+            }
         }
-    }
-    for (int i=0;i<=7;i++){
-        TD=0;
-        TD=mv.TablaDeDatos[i].pos;
-        TD=TD<<16;
-        TD+=mv.TablaDeDatos[i].tamano;
-        for (int k=3;k>=0;k--){
-            vec[j]=(TD>>(k)*8);
-            j++;
+        for (int i=0;i<=7;i++){
+            TD=0;
+            TD=mv.TablaDeDatos[i].pos;
+            TD=TD<<16;
+            TD+=mv.TablaDeDatos[i].tamano;
+            for (int k=3;k>=0;k--){
+                vec[j]=(TD>>(k)*8);
+                j++;
+            }
         }
-    }
-    for (int k=1;k>=0;k--){
+        for (int k=1;k>=0;k--){
             vec[j]=(memory>>(k)*8);
             j++;
+        }
+        fwrite(vec,sizeof(vec),1,arch);
     }
-    fwrite(vec,sizeof(vec),1,arch);
     fclose(arch);
 }
 void chequeo_errores(char top1,char top2,short int cant,char operacion,long int op1,long int op2,MV mv){
