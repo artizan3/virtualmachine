@@ -1,5 +1,6 @@
 #include<time.h>
 #define MAX 16384
+#define MAX2 255
 typedef struct{
     short int pos,tamano;
 }TDD;
@@ -8,7 +9,14 @@ typedef struct{
     char TablaMemoria[MAX];
     long int TablaRegistros[16];
     TDD TablaDeDatos[8];
+    short int cant_seg;
 }MV;
+
+//esto es para los discos
+typedef struct{
+    char arch_disk[MAX2][MAX2];
+    unsigned short int n;
+}TDS;
 
 //variables globales del programa final
 unsigned short int Toggle_debbug=0;
@@ -62,11 +70,13 @@ void Leer(char tipo,long int *tot);
 void Escribe(long int valor,unsigned char tipo,int tamano);
 void EscribeString(char *palabra,unsigned int tamanostr,long int pos,MV *mv);
 void LeeString(unsigned int tamanostr,long int pos,MV *mv);
+void sys_segmento(long int op_seg,long int tamano,long int comienzo,MV *mv);
 long int Suma_reg(char tipo,long int op,MV mv);
 long int Valor_reg(char tipo,long int op,MV mv);
 long int Mascara_registro(long int valor, char tipo);
 long int puntero_memo(long int op,MV mv);
 unsigned short int celdas_memo(long int op);
+int memory_left(MV mv);
 
 void Pre_Funcion(short int cant,long int op1,long int op2,char top1,char top2,char operacion,MV *mv){
     long int valor;
@@ -333,7 +343,6 @@ void SYS(long int op,char top,MV *mv){
     //lee por pantalla
     if (valor==1){
         for (int i=1;i<=rep;i++){
-           //Muestra_mem(pos-(*mv).TablaDeDatos[1].pos);
             Muestra_mem(pos-memo);
             Leer(tipo,&tot);
             for (int j=1;j<=byt;j++){
@@ -353,6 +362,11 @@ void SYS(long int op,char top,MV *mv){
     }
     if (valor==7)
         system("clear");
+    if (valor==0xE){
+        long int op_seg=(*mv).TablaRegistros[10]&0x0000FFFF;//AX
+        //tamanostr tiene cx
+        sys_segmento(op_seg,tamanostr,(*mv).TablaRegistros[11],mv);
+    }
     if (valor==0xF && strcmp(direVMI,"")!=0)
         Toggle_debbug=1;
 }
@@ -406,13 +420,50 @@ void EscribeString(char *palabra,unsigned int tamanostr,long int pos,MV *mv){
 void LeeString(unsigned int tamanostr,long int pos,MV *mv){
     int i=0;
     while ((*mv).TablaMemoria[pos+i]!=0x00 && i!=tamanostr){
-        if ((*mv).TablaMemoria[pos+i]=='/' && (*mv).TablaMemoria[pos+i+1]=='n'){
-            i++;
-            printf("/n");
-        }else
-            printf("%c",(*mv).TablaMemoria[pos+i]);
+        printf("%c",(*mv).TablaMemoria[pos+i]);
         i++;
     }
+}
+void sys_segmento(long int op_seg,long int tamano,long int comienzo,MV *mv){
+    int i;
+    if (op_seg==0 || op_seg==1){
+        if (op_seg==0){//busca un determinado segmento
+            i=(*mv).cant_seg;
+            while ((*mv).TablaDeDatos[i].pos!=-1 && (*mv).TablaDeDatos[i].pos!=comienzo)
+                i++;
+            if ((*mv).TablaDeDatos[i].pos!=-1){//si existe, AX=0 CX=tamano de ese segmento
+                (*mv).TablaRegistros[12]=(*mv).TablaRegistros[12]&0xFFFF0000;
+                (*mv).TablaRegistros[12]+=(*mv).TablaDeDatos[i].tamano;
+            }else{//si no existe AX=%31 y CX=0
+                (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000;
+                (*mv).TablaRegistros[10]+=0x00000031;
+                (*mv).TablaRegistros[12]=(*mv).TablaRegistros[12]&0xFFFF0000;
+            }
+        }else{//va a aniadir un segmento :)
+            if (tamano<memory_left(*mv)){//si hay memoria dispo
+                int aux=0;
+                i=0;
+                while (i!=8 && (*mv).TablaDeDatos[i].pos!=-1){
+                    aux+=(*mv).TablaDeDatos[i].tamano;
+                    i++;
+                }
+                if (i==8){//ya esta el limite maximo de segmentos
+                    (*mv).TablaRegistros[11]=-1;//EBX=-1;
+                    (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000;
+                    (*mv).TablaRegistros[10]+=(0x0000FFFF);
+                }else{//se crea el segmento;
+                    (*mv).TablaRegistros[11]=aux;
+                    (*mv).TablaDeDatos[i].pos=aux;
+                    (*mv).TablaDeDatos[i].tamano=tamano;
+                }
+            }else{//si no hay espacio para alojar en nuevo segmento
+                (*mv).TablaRegistros[11]=-1;//EBX=-1;
+                (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF00FF;
+                (*mv).TablaRegistros[10]+=(0xCC)<<8;//AH=CC
+            }
+        }
+    }else//si la operacion no existe
+        (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000+1;
 }
 void JMP(long int valor,MV *mv){
     (*mv).TablaRegistros[5]=valor;
@@ -618,4 +669,13 @@ unsigned short int celdas_memo(long int op){
     aux2=aux2^0x3;
     aux2++;
     return aux2;
+}
+int memory_left(MV mv){
+    int i=0;
+    unsigned int aux=memory;
+    while (mv.TablaDeDatos[i].pos!=-1){
+        aux-=mv.TablaDeDatos[i].tamano;
+        i++;
+    }
+    return aux;
 }

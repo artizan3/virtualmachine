@@ -7,15 +7,19 @@ void Inicia_memoria(char *dire,MV *mv,unsigned int memory);
 void Inicia_registro(MV *mv);
 void Cant_op(char instruccion,char *top1,char *top2,short int *cant);
 void Lectura(MV *mv);
-void Lectura_argumentos(int argc,char *argv[],short int *diss,unsigned int *memory,char *direVMI);
+void Lectura_argumentos(int argc,char *argv[],short int *diss,unsigned int *memory,char *direVMI,TDS *tds);
 void chequeo_errores(char top1,char top2,short int cant,char operacion,long int op1,long int op2,MV mv);
+
 
 int main(int argc,char *argv[])
 {
+    TDS tds;//el struct de discos, capaz combiene hacerlo global no se
+    tds.n=-1;
 
     MV mv;
+    mv.cant_seg=0;
     unsigned short int diss=0;
-    Lectura_argumentos(argc,argv,&diss,&memory,direVMI);
+    Lectura_argumentos(argc,argv,&diss,&memory,direVMI,&tds);
     Inicia_registro(&mv);
     Inicia_memoria(argv[1],&mv,memory);
     if(diss==1)
@@ -40,7 +44,7 @@ void Inicia_memoria(char *dire,MV *mv,unsigned int memory){
     if (arch!=NULL){
         fread(nombre,sizeof(nombre),1,arch);//lee el titulo
         fread(&version,sizeof(char),1,arch);//lee la version
-        if (version==2){
+        if (version==2 || version==3){
             unsigned int vec[6];
             for (int j=0;j<5;j++){
                 valor=0;
@@ -53,6 +57,7 @@ void Inicia_memoria(char *dire,MV *mv,unsigned int memory){
             }
             SeteoV2(mv,vec,memory);
         }else{
+            (*mv).cant_seg++;
             fread(&val,sizeof(char),1,arch);
             valor+=val;
             valor=(valor<<8);
@@ -133,6 +138,7 @@ void Lectura(MV *mv){
     }
 }
 
+
 void Cant_op(char instruccion,char *top1,char *top2,short int *cant){
     *top1=(instruccion>>6)&0x03;//haciendo el corrimiento me quedaria 00XX donde XX es el valor del operando
     *top2=(instruccion>>4)&0x03;//haciendo la operacion tambien quedaria 00XX.
@@ -144,7 +150,7 @@ void Cant_op(char instruccion,char *top1,char *top2,short int *cant){
         else
             *cant=2;
 }
-void Lectura_argumentos(int argc,char *argv[],short int *diss,unsigned int *memory,char *direVMI){
+void Lectura_argumentos(int argc,char *argv[],short int *diss,unsigned int *memory,char *direVMI,TDS *tds){
     for (int i=2;i<argc;i++){
         if (strcmp(argv[i],"-d")==0)
             (*diss)=1;
@@ -152,10 +158,15 @@ void Lectura_argumentos(int argc,char *argv[],short int *diss,unsigned int *memo
             if (argv[i][strlen(argv[i])-1]=='i'){
                 strcpy(direVMI,argv[i]);
             }else{
-                (*memory)=0;
-                for (int j=0;j<strlen(argv[i]);j++){
-                    (*memory)=(*memory)*10;
-                    (*memory)+=argv[i][j]-48;
+                if(argv[i][strlen(argv[i])-2]==argv[i][strlen(argv[i])-1] && argv[i][strlen(argv[i])-2]=='d'){
+                    (*tds).n++;
+                    strcpy((*tds).arch_disk[(*tds).n],argv[i]);
+                }else{
+                    (*memory)=0;
+                    for (int j=0;j<strlen(argv[i]);j++){
+                        (*memory)=(*memory)*10;
+                        (*memory)+=argv[i][j]-48;
+                    }
                 }
             }
         }
@@ -167,6 +178,7 @@ void SeteoV2(MV *mv,unsigned int vec[],unsigned int memory){
     int i=0;
     for (i;i<=4;i++){
         if (vec[i]>0){
+            (*mv).cant_seg++;
             if (aux>memory){
                 printf("ERROR(4): los segmentos ocupan mas de la memoria disponible");
                 exit(-1);
@@ -186,9 +198,25 @@ void SeteoV2(MV *mv,unsigned int vec[],unsigned int memory){
             (*mv).TablaDeDatos[c].tamano=vec[i];
             aux+=vec[i];
             c++;
-        }//else
-         //   (*mv).TablaRegistros[i]=-1;
+        }else{
+           if (i==1)
+                (*mv).TablaRegistros[2]=-1;
+            if (i==2)
+                (*mv).TablaRegistros[1]=-1;
+            if (i==3)
+                (*mv).TablaRegistros[3]=-1;
+            if (i==4)
+                (*mv).TablaRegistros[4]=-1;
+        }
     }
+    //aca deja los segmentos q no existen en -1, ej:
+    //cargo hasta el segmento 3, por lo tanto 4 5 6 y 7 van a estar en '-1'
+    i=(*mv).cant_seg;
+    for (i;i<=7;i++){
+        (*mv).TablaDeDatos[i].pos=-1;
+        (*mv).TablaDeDatos[i].tamano=-1;
+    }
+
 }
 void IMG_debug(MV mv){
     FILE *arch=fopen(direVMI,"wb");
@@ -250,4 +278,5 @@ void chequeo_errores(char top1,char top2,short int cant,char operacion,long int 
         exit(-1);
     }
 }
+
 
