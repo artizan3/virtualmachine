@@ -2,24 +2,26 @@
 #include <stdlib.h>
 #include "funciones.h"
 #include "dissasembler.h"
+#include <time.h>
+
 
 void Inicia_memoria(char *dire,MV *mv,unsigned int memory);
 void Inicia_registro(MV *mv);
 void Cant_op(char instruccion,char *top1,char *top2,short int *cant);
 void Lectura(MV *mv);
-void Lectura_argumentos(int argc,char *argv[],short int *diss,unsigned int *memory,char *direVMI,TDS *tds);
+void Lectura_argumentos(int argc,char *argv[],short int *diss,unsigned int *memory,char *direVMI,MV *mv);
 void chequeo_errores(char top1,char top2,short int cant,char operacion,long int op1,long int op2,MV mv);
+void Inicio_discos(mv);
 
 
 int main(int argc,char *argv[])
 {
-    TDS tds;//el struct de discos, capaz combiene hacerlo global no se
-    tds.n=-1;
-
     MV mv;
+    mv.tds.n=-1;
     mv.cant_seg=0;
     unsigned short int diss=0;
-    Lectura_argumentos(argc,argv,&diss,&memory,direVMI,&tds);
+    Lectura_argumentos(argc,argv,&diss,&memory,direVMI,&mv);
+    Inicio_discos(mv);
     Inicia_registro(&mv);
     Inicia_memoria(argv[1],&mv,memory);
     if(diss==1)
@@ -150,7 +152,7 @@ void Cant_op(char instruccion,char *top1,char *top2,short int *cant){
         else
             *cant=2;
 }
-void Lectura_argumentos(int argc,char *argv[],short int *diss,unsigned int *memory,char *direVMI,TDS *tds){
+void Lectura_argumentos(int argc,char *argv[],short int *diss,unsigned int *memory,char *direVMI,MV *mv){
     for (int i=2;i<argc;i++){
         if (strcmp(argv[i],"-d")==0)
             (*diss)=1;
@@ -159,8 +161,8 @@ void Lectura_argumentos(int argc,char *argv[],short int *diss,unsigned int *memo
                 strcpy(direVMI,argv[i]);
             }else{
                 if(argv[i][strlen(argv[i])-2]==argv[i][strlen(argv[i])-1] && argv[i][strlen(argv[i])-2]=='d'){
-                    (*tds).n++;
-                    strcpy((*tds).arch_disk[(*tds).n],argv[i]);
+                    (*mv).tds.n++;
+                    strcpy((*mv).tds.arch_disk[(*mv).tds.n],argv[i]);
                 }else{
                     (*memory)=0;
                     for (int j=0;j<strlen(argv[i]);j++){
@@ -278,5 +280,66 @@ void chequeo_errores(char top1,char top2,short int cant,char operacion,long int 
         exit(-1);
     }
 }
+void Inicio_discos(MV mv){
+    char aux;
+    FILE *arch;
+    unsigned char header[512];
+    armar_header(header);
+    for (int i=0;i<=mv.tds.n;i++){
+        arch=fopen(mv.tds.arch_disk[i],"rb");
+        if (arch!=NULL){
+            fread(&aux,sizeof(char),1,arch);
+            if (aux=='V')
+                fclose(arch);
+            else{
+                fclose(arch);
+                arch=fopen(mv.tds.arch_disk[i],"wb");
+                fwrite(header,sizeof(header),1,arch);
+                fclose(arch);
+            }
+        }
+    }
+}
+void armar_header(unsigned char *header){
+    header[0]=0x56;header[1]=0x44;header[2]=0x44;header[3]=0x30;//VDD0
+    header[4]=0x00;header[5]=0x00;header[6]=0x00;header[7]=0x01;//00000001
+    char aux;
+    for (int i=8;i<=23;i++){
+        aux=0;
+        aux=rand()%16;
+        header[i]=aux;
+    }//GUID
+
+    time_t tiempo_actual;
+    struct tm *fecha_actual;
+
+    tiempo_actual = time(NULL);
+    fecha_actual = localtime(&tiempo_actual);
+
+    header[24]=0x07;
+    header[25]=0xE7;
+    header[26]=fecha_actual->tm_mon + 1;
+    header[27]=fecha_actual->tm_mday;
+
+    header[28]=fecha_actual->tm_hour;
+    header[29]=fecha_actual->tm_min;
+    header[30]=fecha_actual->tm_sec;
+    header[31]=0;//como hacemos las decimas
+
+    header[31]=1;//dinamico
+    header[32]=(0x80)&0xFF;//cilindro
+    header[33]=0x80;//cabeza
+    header[34]=0x80;//sectores
+
+    header[35]=0x00;
+    header[36]=0x00;
+    header[37]=0x02;
+    header[38]=0x00;//tamano sector
+
+    for (int i=39;i<=511;i++){
+        header[i]=0;//relleno con 0
+    }
+}
+
 
 

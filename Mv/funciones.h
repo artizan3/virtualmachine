@@ -1,6 +1,12 @@
 #include<time.h>
 #define MAX 16384
 #define MAX2 255
+//esto es para los discos
+typedef struct{
+    char arch_disk[MAX2][MAX2];
+    int n;
+}TDS;
+
 typedef struct{
     short int pos,tamano;
 }TDD;
@@ -10,13 +16,8 @@ typedef struct{
     long int TablaRegistros[16];
     TDD TablaDeDatos[8];
     short int cant_seg;
+    TDS tds;
 }MV;
-
-//esto es para los discos
-typedef struct{
-    char arch_disk[MAX2][MAX2];
-    unsigned short int n;
-}TDS;
 
 //variables globales del programa final
 unsigned short int Toggle_debbug=0;
@@ -71,6 +72,8 @@ void Escribe(long int valor,unsigned char tipo,int tamano);
 void EscribeString(char *palabra,unsigned int tamanostr,long int pos,MV *mv);
 void LeeString(unsigned int tamanostr,long int pos,MV *mv);
 void sys_segmento(long int op_seg,long int tamano,long int comienzo,MV *mv);
+void sys_disco(long int AX,unsigned int CX,long int DX,long int EBX,MV *mv);
+char comprobar_parametros_disco(short int ah,short int dl,short int ch,short int cl,short int dh,MV mv);
 long int Suma_reg(char tipo,long int op,MV mv);
 long int Valor_reg(char tipo,long int op,MV mv);
 long int Mascara_registro(long int valor, char tipo);
@@ -318,12 +321,14 @@ void SYS(long int op,char top,MV *mv){
     //preparo pos en edx
         long int regpointer=((*mv).TablaRegistros[13]&0xFFFF0000)>>16;
         long int memo=(*mv).TablaDeDatos[regpointer].pos;
-        long int offset=((*mv).TablaRegistros[13]&0x0000FFFF);
+        long int offset=((*mv).TablaRegistros[13]&0x0000FFFF);//DX
         pos=memo+offset;
         rep=(*mv).TablaRegistros[12]&0x000000FF;//CL
         byt=((*mv).TablaRegistros[12]&0x0000FF00)>>8;//CH
         tipo=(*mv).TablaRegistros[10]&0x000000FF;//AL
         tamanostr=(*mv).TablaRegistros[12]&0x0000FFFF;//CX
+        long int op_seg=(*mv).TablaRegistros[10]&0x0000FFFF;//AX
+        long int indice=(*mv).TablaRegistros[11];//EBX
     //escribe por pantalla
     if (valor==2){
         for(int i=1;i<=rep;i++){
@@ -362,11 +367,10 @@ void SYS(long int op,char top,MV *mv){
     }
     if (valor==7)
         system("clear");
-    if (valor==0xE){
-        long int op_seg=(*mv).TablaRegistros[10]&0x0000FFFF;//AX
-        //tamanostr tiene cx
-        sys_segmento(op_seg,tamanostr,(*mv).TablaRegistros[11],mv);
-    }
+    if (valor==0xE)
+        sys_segmento(op_seg,tamanostr,indice,mv);
+    if (valor==0xD)
+        sys_disco(op_seg,tamanostr,offset,indice,mv);
     if (valor==0xF && strcmp(direVMI,"")!=0)
         Toggle_debbug=1;
 }
@@ -429,9 +433,9 @@ void sys_segmento(long int op_seg,long int tamano,long int comienzo,MV *mv){
     if (op_seg==0 || op_seg==1){
         if (op_seg==0){//busca un determinado segmento
             i=(*mv).cant_seg;
-            while ((*mv).TablaDeDatos[i].pos!=-1 && (*mv).TablaDeDatos[i].pos!=comienzo)
+            while ((*mv).TablaDeDatos[i].pos!=-1 && (*mv).TablaDeDatos[i].pos!=comienzo && i<=7)
                 i++;
-            if ((*mv).TablaDeDatos[i].pos!=-1){//si existe, AX=0 CX=tamano de ese segmento
+            if ((*mv).TablaDeDatos[i].pos!=-1 && i<=7){//si existe, AX=0 CX=tamano de ese segmento
                 (*mv).TablaRegistros[12]=(*mv).TablaRegistros[12]&0xFFFF0000;
                 (*mv).TablaRegistros[12]+=(*mv).TablaDeDatos[i].tamano;
             }else{//si no existe AX=%31 y CX=0
@@ -465,6 +469,83 @@ void sys_segmento(long int op_seg,long int tamano,long int comienzo,MV *mv){
     }else//si la operacion no existe
         (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000+1;
 }
+void sys_disco(long int AX,unsigned int CX,long int DX,long int EBX,MV *mv){
+    FILE *arch;
+    short int al=(AX)&0x000000FF;//cantidad de sectores para leer o escribir
+    short int ah=(AX)>>8;//accion y retroalimentacion
+    short int cl=(CX)&0x000000FF;//num cabeza
+    short int ch=(CX)>>8;//num cilindro
+    short int dl=(DX)&0x000000FF;//num disco
+    short int dh=(DX)>>8;//num sector
+    //EBX indica la primer celda del buffer de lectura/escritura
+    char aux=comprobar_parametros_disco(ah,dl,ch,cl,dh,*mv);
+    if (aux==0){
+        if (ah=0){//Consultar último estado?
+
+        }
+        if (ah=0x02){//lectura
+
+        }
+        if (ah=0x03){//escritura
+
+        }
+        if (ah=0x08){
+            int i=32;
+            arch=fopen((*mv).tds.arch_disk[dl],"rb");
+            fseek(arch, i, SEEK_SET);
+            fread(&ch,sizeof(char),1,arch);//guardar en reg
+            ch=0xFF;
+            (*mv).TablaRegistros[12]=0xFFFF00FF;
+            (*mv).TablaRegistros[12]+=(ch<<8);
+            fread(&cl,sizeof(char),1,arch);//guardar en reg
+            cl=0xFF;
+            (*mv).TablaRegistros[12]=0xFFFFFF00;
+            (*mv).TablaRegistros[12]+=cl;
+            fread(&dh,sizeof(char),1,arch);//guardar en reg
+            dh=0xFF;
+            (*mv).TablaRegistros[13]=0xFFFF00FF;
+            (*mv).TablaRegistros[13]+=(dh<<8);
+            ah=0;
+            (*mv).TablaRegistros[10]=0xFFFF00FF;//guarda ah
+        }
+    }else{
+        (*mv).TablaRegistros[10]=0xFFFF00FF;
+        (*mv).TablaRegistros[10]+=(((ah)&0xFF)<<8);
+    }
+}
+char comprobar_parametros_disco(short int ah,short int dl,short int ch,short int cl,short int dh,MV mv){
+    int aux;
+    char aux2;
+    FILE *arch;
+    if (ah!=0x00 && ah!=0x02 && ah!=0x03 && ah!=0x08){
+        aux=0x01;//si la op es incorrecta
+    }else{
+        if (dl>mv.tds.n)
+            aux=0x31;//si el numero de disco no existe
+        else{
+            arch=fopen(mv.tds.arch_disk[dl],"rb");
+            int i=32;
+            fseek(arch, i, SEEK_SET);
+            fread(&aux2,sizeof(char),1,arch);
+            if (ch>aux2)
+                aux=0x0B;//si el numero de cilindro no existe
+            else{
+                fread(&aux2,sizeof(char),1,arch);
+                if (cl>aux2)
+                    aux=0x0C;//si el numero de cabeza no existe
+                else{
+                    fread(&aux2,sizeof(char),1,arch);
+                    if (dh>aux2)
+                        aux=0x0C;//si el numero de sector no existe
+                    else
+                        aux=0;//si esta en condiciones
+                }
+            }
+            fclose(arch);
+        }
+    }
+}
+
 void JMP(long int valor,MV *mv){
     (*mv).TablaRegistros[5]=valor;
 }
