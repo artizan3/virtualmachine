@@ -23,6 +23,7 @@ typedef struct{
 unsigned short int Toggle_debbug=0;
 char direVMI[50]="";
 unsigned int memory=16384;
+char ah_aux;
 
 typedef void Funciones2op(long int op1,char top1,long int valor,MV *mv);
 void MOV(long int op1,char top1,long int valor,MV *mv);
@@ -74,6 +75,9 @@ void LeeString(unsigned int tamanostr,long int pos,MV *mv);
 void sys_segmento(long int op_seg,long int tamano,long int comienzo,MV *mv);
 void sys_disco(long int AX,unsigned int CX,long int DX,long int EBX,MV *mv);
 char comprobar_parametros_disco(short int ah,short int dl,short int ch,short int cl,short int dh,MV mv);
+int max_disco(short int dl,MV mv);
+long int movimiento_disco(short int ch,short int cl,short int dh,short int dl,MV mv);
+char check_escritura_disco(short int al,short int ch,short int cl,short int dh,short int dl,long int EBX,MV mv);
 long int Suma_reg(char tipo,long int op,MV mv);
 long int Valor_reg(char tipo,long int op,MV mv);
 long int Mascara_registro(long int valor, char tipo);
@@ -476,42 +480,66 @@ void sys_disco(long int AX,unsigned int CX,long int DX,long int EBX,MV *mv){
     short int cl=(CX)&0x000000FF;//num cabeza
     short int ch=(CX)>>8;//num cilindro
     short int dl=(DX)&0x000000FF;//num disco
+    dl--;//YA QUE NUESTROS DISCOS ARRANCAN A CONTARSE DESDE EL 0
     short int dh=(DX)>>8;//num sector
     //EBX indica la primer celda del buffer de lectura/escritura
     char aux=comprobar_parametros_disco(ah,dl,ch,cl,dh,*mv);
     if (aux==0){
-        if (ah=0){//Consultar último estado?
-
+        if (ah=0){//Consultar último estado
+            ah=ah_aux;
+            (*mv).TablaRegistros[10]=0xFFFF00FF;
+            (*mv).TablaRegistros[10]+=(ah<<8)&0x0000FF00;
         }
         if (ah=0x02){//lectura
 
         }
         if (ah=0x03){//escritura
-
+            aux=check_escritura_disco(al,ch,cl,dh,dl,EBX,*mv);
+            if (aux==0){//aca realiza la escritura
+                FILE *arch=fopen((*mv).tds.arch_disk[dl],"wb");
+                fseek(arch,movimiento_disco(ch,cl,dh,dl,*mv),SEEK_SET);
+                char dato;
+                int puntero=(EBX&0xFFFF0000)>>16;
+                int offset=(EBX%0x0000FFFF);
+                for (int i=0;i<al*512;i++){
+                    dato=(*mv).TablaMemoria[(*mv).TablaDeDatos[puntero].pos+offset+i];
+                    fwrite(dato,sizeof(dato),1,arch);
+                }
+                fclose(arch);
+                //aca el feedback
+                ah=0;
+                (*mv).TablaRegistros[10]=0xFFFF00FF;//operacion exitosa
+                //al queda igual en este caso ya que si no, no se pudiera haber hecho la transferencia
+            }else
+                ah=aux;
+                (*mv).TablaRegistros[10]=0xFFFF00FF;
+                (*mv).TablaRegistros[10]+=(ah<<8)&0x0000FF00;
         }
         if (ah=0x08){
             int i=32;
             arch=fopen((*mv).tds.arch_disk[dl],"rb");
             fseek(arch, i, SEEK_SET);
             fread(&ch,sizeof(char),1,arch);//guardar en reg
-            ch=0xFF;
+            ch&=0xFF;
             (*mv).TablaRegistros[12]=0xFFFF00FF;
             (*mv).TablaRegistros[12]+=(ch<<8);
             fread(&cl,sizeof(char),1,arch);//guardar en reg
-            cl=0xFF;
+            cl&=0xFF;
             (*mv).TablaRegistros[12]=0xFFFFFF00;
             (*mv).TablaRegistros[12]+=cl;
             fread(&dh,sizeof(char),1,arch);//guardar en reg
-            dh=0xFF;
+            dh&=0xFF;
             (*mv).TablaRegistros[13]=0xFFFF00FF;
             (*mv).TablaRegistros[13]+=(dh<<8);
             ah=0;
             (*mv).TablaRegistros[10]=0xFFFF00FF;//guarda ah
         }
     }else{
+        ah=aux;
         (*mv).TablaRegistros[10]=0xFFFF00FF;
-        (*mv).TablaRegistros[10]+=(((ah)&0xFF)<<8);
+        (*mv).TablaRegistros[10]+=(ah<<8)&0x0000FF00;
     }
+    ah_aux=ah;
 }
 char comprobar_parametros_disco(short int ah,short int dl,short int ch,short int cl,short int dh,MV mv){
     int aux;
@@ -536,7 +564,7 @@ char comprobar_parametros_disco(short int ah,short int dl,short int ch,short int
                 else{
                     fread(&aux2,sizeof(char),1,arch);
                     if (dh>aux2)
-                        aux=0x0C;//si el numero de sector no existe
+                        aux=0x0D;//si el numero de sector no existe
                     else
                         aux=0;//si esta en condiciones
                 }
@@ -544,6 +572,40 @@ char comprobar_parametros_disco(short int ah,short int dl,short int ch,short int
             fclose(arch);
         }
     }
+    return aux;
+}
+int max_disco(short int dl,MV mv){
+    char tot_dis,tot_h,tot_sec;
+    int i=32;
+    FILE *arch=fopen(mv.tds.arch_disk[dl],"rb");
+    fseek(arch, i, SEEK_SET);
+    fread(&tot_dis,sizeof(char),1,arch);//guardar en reg
+    fread(&tot_h,sizeof(char),1,arch);//guardar en reg
+    fread(&tot_sec,sizeof(char),1,arch);//guardar en reg
+    return (1+tot_dis*tot_h*tot_sec)*512;
+}
+long int movimiento_disco(short int ch,short int cl,short int dh,short int dl,MV mv){
+    char cant_cab,cant_sec;
+    int i=33;
+    FILE *arch=fopen(mv.tds.arch_disk[dl],"rb");
+    fseek(arch, i, SEEK_SET);
+    fread(&cant_cab,sizeof(char),1,arch);//guardar en reg
+    fread(&cant_sec,sizeof(char),1,arch);//guardar en reg
+    return (1+ch*cant_cab*cant_sec+cl*cant_sec+dh)*512;
+}
+char check_escritura_disco(short int al,short int ch,short int cl,short int dh,short int dl,long int EBX,MV mv){
+    long int stop_disk=max_disco(dl,mv);//valor total del disco
+    int offset=EBX&0x0000FFFF;
+    int pointer=(EBX&0xFFFF0000)>>16;
+    int tamano=mv.TablaDeDatos[pointer].tamano-offset;//me fijo si tengo espacio para leer de la memo
+    long int resta_final=stop_disk-movimiento_disco(ch,cl,dh,dl,mv)-al*512;//me fijo si tengo espacio para escribir en el disco
+    if (resta_final>=0){
+        if (tamano>=al*512){
+           return 0;
+        }else
+            return 0xCC;
+    }else
+        return 0xCC;
 }
 
 void JMP(long int valor,MV *mv){
