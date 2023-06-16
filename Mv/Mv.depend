@@ -22,3 +22,15 @@
 
 1681998058 c:\users\bruno\onedrive\desktop\mv\dissasembler.h
 
+1686880681 source:c:\users\bruno trinitario\desktop\virtualmachine-main\mv\main.c
+	<stdio.h>
+	<stdlib.h>
+	"funciones.h"
+	"dissasembler.h"
+	<time.h>
+
+1686939654 c:\users\bruno trinitario\desktop\virtualmachine-main\mv\funciones.h
+	<time.h>
+
+1686880681 c:\users\bruno trinitario\desktop\virtualmachine-main\mv\dissasembler.h
+

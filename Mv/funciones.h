@@ -78,6 +78,7 @@ char comprobar_parametros_disco(short int ah,short int dl,short int ch,short int
 int max_disco(short int dl,MV mv);
 long int movimiento_disco(short int ch,short int cl,short int dh,short int dl,MV mv);
 char check_escritura_disco(short int al,short int ch,short int cl,short int dh,short int dl,long int EBX,MV mv);
+char chek_lectura_disco(long int EBX,MV mv,short int al);
 long int Suma_reg(char tipo,long int op,MV mv);
 long int Valor_reg(char tipo,long int op,MV mv);
 long int Mascara_registro(long int valor, char tipo);
@@ -459,14 +460,15 @@ void sys_segmento(long int op_seg,long int tamano,long int comienzo,MV *mv){
                     (*mv).TablaRegistros[11]=-1;//EBX=-1;
                     (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000;
                     (*mv).TablaRegistros[10]+=(0x0000FFFF);
-                }else{//se crea el segmento;
+                }else{//se crea el segmento
                     (*mv).TablaRegistros[11]=aux;
                     (*mv).TablaDeDatos[i].pos=aux;
                     (*mv).TablaDeDatos[i].tamano=tamano;
+                    (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000;//ax=00
                 }
             }else{//si no hay espacio para alojar en nuevo segmento
                 (*mv).TablaRegistros[11]=-1;//EBX=-1;
-                (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF00FF;
+                (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000;
                 (*mv).TablaRegistros[10]+=(0xCC)<<8;//AH=CC
             }
         }
@@ -485,22 +487,45 @@ void sys_disco(long int AX,unsigned int CX,long int DX,long int EBX,MV *mv){
     //EBX indica la primer celda del buffer de lectura/escritura
     char aux=comprobar_parametros_disco(ah,dl,ch,cl,dh,*mv);
     if (aux==0){
-        if (ah=0){//Consultar último estado
+        if (ah==0){//Consultar último estado
             ah=ah_aux;
             (*mv).TablaRegistros[10]=0xFFFF00FF;
             (*mv).TablaRegistros[10]+=(ah<<8)&0x0000FF00;
         }
-        if (ah=0x02){//lectura
-
+        if (ah==0x02){//lectura
+            aux=chek_lectura_disco(EBX,*mv,al);
+            (*mv).TablaRegistros[10]=0xFFFF00FF;
+            if(aux==0){
+                FILE *arch=fopen((*mv).tds.arch_disk[dl],"rb");
+                fseek(arch,movimiento_disco(ch,cl,dh,dl,*mv),SEEK_SET);
+                char dato;
+                int puntero=(EBX&0xFFFF0000)>>16; //deberia apuntar despues de extrasegment a partir de 64
+                int offset=(EBX&0x0000FFFF);
+                int i=1;
+                while(i<=al*512 && !feof(arch)){
+                    fread(dato,sizeof(dato),1,arch);
+                    (*mv).TablaMemoria[(*mv).TablaDeDatos[puntero].pos+offset+i-1]=dato;
+                    i++;
+                }
+                //preguntar si se quiere leer sector inexistente pero dentro de parametros de disco se devuelve 0 y se extiende arch
+                fclose(arch);
+                ah=0;
+                al=i/512;
+                (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000;//ah=0
+                (*mv).TablaRegistros[10]+=(al)&0xFF;//al=sectores tranferidos
+            }else{
+                ah=aux;
+                (*mv).TablaRegistros[10]+=(ah<<8)&0x0000FF00;
+            }
         }
-        if (ah=0x03){//escritura
+        if (ah==0x03){//escritura
             aux=check_escritura_disco(al,ch,cl,dh,dl,EBX,*mv);
             if (aux==0){//aca realiza la escritura
                 FILE *arch=fopen((*mv).tds.arch_disk[dl],"wb");
                 fseek(arch,movimiento_disco(ch,cl,dh,dl,*mv),SEEK_SET);
                 char dato;
                 int puntero=(EBX&0xFFFF0000)>>16;
-                int offset=(EBX%0x0000FFFF);
+                int offset=(EBX&0x0000FFFF);
                 for (int i=0;i<al*512;i++){
                     dato=(*mv).TablaMemoria[(*mv).TablaDeDatos[puntero].pos+offset+i];
                     fwrite(dato,sizeof(dato),1,arch);
@@ -515,7 +540,7 @@ void sys_disco(long int AX,unsigned int CX,long int DX,long int EBX,MV *mv){
                 (*mv).TablaRegistros[10]=0xFFFF00FF;
                 (*mv).TablaRegistros[10]+=(ah<<8)&0x0000FF00;
         }
-        if (ah=0x08){
+        if (ah==0x08){
             int i=32;
             arch=fopen((*mv).tds.arch_disk[dl],"rb");
             fseek(arch, i, SEEK_SET);
@@ -526,7 +551,7 @@ void sys_disco(long int AX,unsigned int CX,long int DX,long int EBX,MV *mv){
             fread(&cl,sizeof(char),1,arch);//guardar en reg
             cl&=0xFF;
             (*mv).TablaRegistros[12]=0xFFFFFF00;
-            (*mv).TablaRegistros[12]+=cl;
+            (*mv).TablaRegistros[12]+=(cl<<8);
             fread(&dh,sizeof(char),1,arch);//guardar en reg
             dh&=0xFF;
             (*mv).TablaRegistros[13]=0xFFFF00FF;
@@ -582,6 +607,7 @@ int max_disco(short int dl,MV mv){
     fread(&tot_dis,sizeof(char),1,arch);//guardar en reg
     fread(&tot_h,sizeof(char),1,arch);//guardar en reg
     fread(&tot_sec,sizeof(char),1,arch);//guardar en reg
+    fclose(arch);
     return (1+tot_dis*tot_h*tot_sec)*512;
 }
 long int movimiento_disco(short int ch,short int cl,short int dh,short int dl,MV mv){
@@ -591,6 +617,7 @@ long int movimiento_disco(short int ch,short int cl,short int dh,short int dl,MV
     fseek(arch, i, SEEK_SET);
     fread(&cant_cab,sizeof(char),1,arch);//guardar en reg
     fread(&cant_sec,sizeof(char),1,arch);//guardar en reg
+    fclose(arch);
     return (1+ch*cant_cab*cant_sec+cl*cant_sec+dh)*512;
 }
 char check_escritura_disco(short int al,short int ch,short int cl,short int dh,short int dl,long int EBX,MV mv){
@@ -606,6 +633,15 @@ char check_escritura_disco(short int al,short int ch,short int cl,short int dh,s
             return 0xCC;
     }else
         return 0xCC;
+}
+char chek_lectura_disco(long int EBX,MV mv,short int al){
+    int offset=EBX&0x0000FFFF;
+    int pointer=(EBX&0xFFFF0000)>>16;
+    int tamano=mv.TablaDeDatos[pointer].tamano-offset;
+    if(tamano>=al*512)
+        return 0;
+    else
+        return 0x04;
 }
 
 void JMP(long int valor,MV *mv){

@@ -14,8 +14,7 @@ void chequeo_errores(char top1,char top2,short int cant,char operacion,long int 
 void Inicio_discos(mv);
 
 
-int main(int argc,char *argv[])
-{
+int main(int argc,char *argv[]){
     MV mv;
     mv.tds.n=-1;
     mv.cant_seg=0;
@@ -160,7 +159,7 @@ void Lectura_argumentos(int argc,char *argv[],short int *diss,unsigned int *memo
             if (argv[i][strlen(argv[i])-1]=='i'){
                 strcpy(direVMI,argv[i]);
             }else{
-                if(argv[i][strlen(argv[i])-2]==argv[i][strlen(argv[i])-1] && argv[i][strlen(argv[i])-2]=='d'){
+                if(argv[i][strlen(argv[i])-2]==argv[i][strlen(argv[i])-1] && argv[i][strlen(argv[i])-2]=='d'){//chequear esto
                     (*mv).tds.n++;
                     strcpy((*mv).tds.arch_disk[(*mv).tds.n],argv[i]);
                 }else{
@@ -218,7 +217,6 @@ void SeteoV2(MV *mv,unsigned int vec[],unsigned int memory){
         (*mv).TablaDeDatos[i].pos=-1;
         (*mv).TablaDeDatos[i].tamano=-1;
     }
-
 }
 void IMG_debug(MV mv){
     FILE *arch=fopen(direVMI,"wb");
@@ -284,15 +282,13 @@ void Inicio_discos(MV mv){
     char aux;
     FILE *arch;
     unsigned char header[512];
-    armar_header(header);
     for (int i=0;i<=mv.tds.n;i++){
         arch=fopen(mv.tds.arch_disk[i],"rb");
         if (arch!=NULL){
             fread(&aux,sizeof(char),1,arch);
-            if (aux=='V')
-                fclose(arch);
-            else{
-                fclose(arch);
+            fclose(arch);
+            if (aux!='V'){
+                armar_header(header);
                 arch=fopen(mv.tds.arch_disk[i],"wb");
                 fwrite(header,sizeof(header),1,arch);
                 fclose(arch);
