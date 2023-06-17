@@ -2,14 +2,9 @@
 <CodeBlocks_layout_file>
 	<FileVersion major="1" minor="0" />
 	<ActiveTarget name="Debug" />
-	<File name="dissasembler.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="6" zoom_2="0">
+	<File name="funciones.h" open="1" top="1" tabpos="2" split="0" active="1" splitpos="0" zoom_1="8" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2401" topLine="57" />
-		</Cursor>
-	</File>
-	<File name="funciones.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="8" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="17138" topLine="169" />
+			<Cursor1 position="16269" topLine="156" />
 		</Cursor>
 		<Folding>
 			<Collapse line="88" />
@@ -25,41 +20,49 @@
 			<Collapse line="261" />
 			<Collapse line="280" />
 			<Collapse line="299" />
-			<Collapse line="337" />
-			<Collapse line="381" />
-			<Collapse line="391" />
-			<Collapse line="417" />
-			<Collapse line="428" />
-			<Collapse line="435" />
-			<Collapse line="646" />
-			<Collapse line="649" />
-			<Collapse line="653" />
-			<Collapse line="657" />
-			<Collapse line="661" />
-			<Collapse line="665" />
-			<Collapse line="669" />
-			<Collapse line="673" />
-			<Collapse line="676" />
-			<Collapse line="679" />
-			<Collapse line="683" />
-			<Collapse line="701" />
-			<Collapse line="716" />
-			<Collapse line="735" />
-			<Collapse line="739" />
-			<Collapse line="742" />
-			<Collapse line="763" />
-			<Collapse line="780" />
-			<Collapse line="787" />
-			<Collapse line="802" />
-			<Collapse line="814" />
-			<Collapse line="824" />
-			<Collapse line="836" />
-			<Collapse line="844" />
+			<Collapse line="335" />
+			<Collapse line="379" />
+			<Collapse line="389" />
+			<Collapse line="415" />
+			<Collapse line="426" />
+			<Collapse line="433" />
+			<Collapse line="570" />
+			<Collapse line="603" />
+			<Collapse line="614" />
+			<Collapse line="648" />
+			<Collapse line="651" />
+			<Collapse line="655" />
+			<Collapse line="659" />
+			<Collapse line="663" />
+			<Collapse line="667" />
+			<Collapse line="671" />
+			<Collapse line="675" />
+			<Collapse line="678" />
+			<Collapse line="681" />
+			<Collapse line="685" />
+			<Collapse line="703" />
+			<Collapse line="718" />
+			<Collapse line="737" />
+			<Collapse line="741" />
+			<Collapse line="744" />
+			<Collapse line="765" />
+			<Collapse line="782" />
+			<Collapse line="789" />
+			<Collapse line="804" />
+			<Collapse line="816" />
+			<Collapse line="826" />
+			<Collapse line="838" />
+			<Collapse line="846" />
 		</Folding>
 	</File>
-	<File name="main.c" open="1" top="1" tabpos="1" split="0" active="1" splitpos="0" zoom_1="7" zoom_2="0">
+	<File name="dissasembler.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="6" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="1215" topLine="32" />
+			<Cursor1 position="2401" topLine="57" />
+		</Cursor>
+	</File>
+	<File name="main.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="7" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="5397" topLine="78" />
 		</Cursor>
 		<Folding>
 			<Collapse line="83" />
@@ -67,6 +70,8 @@
 			<Collapse line="175" />
 			<Collapse line="220" />
 			<Collapse line="261" />
+			<Collapse line="280" />
+			<Collapse line="299" />
 		</Folding>
 	</File>
 </CodeBlocks_layout_file>

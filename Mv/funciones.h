@@ -72,7 +72,7 @@ void Leer(char tipo,long int *tot);
 void Escribe(long int valor,unsigned char tipo,int tamano);
 void EscribeString(char *palabra,unsigned int tamanostr,long int pos,MV *mv);
 void LeeString(unsigned int tamanostr,long int pos,MV *mv);
-void sys_segmento(long int op_seg,long int tamano,long int comienzo,MV *mv);
+void sys_segmento(MV *mv);
 void sys_disco(MV *mv);
 char comprobar_parametros_disco(short int ah,short int dl,short int ch,short int cl,short int dh,MV mv);
 unsigned int max_disco(short int dl,MV mv);
@@ -84,7 +84,7 @@ long int Valor_reg(char tipo,long int op,MV mv);
 long int Mascara_registro(long int valor, char tipo);
 long int puntero_memo(long int op,MV mv);
 unsigned short int celdas_memo(long int op);
-int memory_left(MV mv);
+unsigned int memory_left(MV mv);
 
 void Pre_Funcion(short int cant,long int op1,long int op2,char top1,char top2,char operacion,MV *mv){
     long int valor;
@@ -332,8 +332,6 @@ void SYS(long int op,char top,MV *mv){
         byt=((*mv).TablaRegistros[12]&0x0000FF00)>>8;//CH
         tipo=(*mv).TablaRegistros[10]&0x000000FF;//AL
         tamanostr=(*mv).TablaRegistros[12]&0x0000FFFF;//CX
-        long int op_seg=(*mv).TablaRegistros[10]&0x0000FFFF;//AX
-        long int indice=(*mv).TablaRegistros[11];//EBX
     //escribe por pantalla
     if (valor==2){
         for(int i=1;i<=rep;i++){
@@ -373,7 +371,7 @@ void SYS(long int op,char top,MV *mv){
     if (valor==7)
         system("clear");
     if (valor==0xE)
-        sys_segmento(op_seg,tamanostr,indice,mv);
+        sys_segmento(mv);
     if (valor==0xD)
         sys_disco(mv);
     if (valor==0xF && strcmp(direVMI,"")!=0)
@@ -433,11 +431,15 @@ void LeeString(unsigned int tamanostr,long int pos,MV *mv){
         i++;
     }
 }
-void sys_segmento(long int op_seg,long int tamano,long int comienzo,MV *mv){
+void sys_segmento(MV *mv){
     int i;
+    int op_seg=(*mv).TablaRegistros[10]&0x0000FFFF;
+    int tamano=(*mv).TablaRegistros[12]&0x0000FFFF;
+    long int comienzo=(*mv).TablaRegistros[11];
     if (op_seg==0 || op_seg==1){
         if (op_seg==0){//busca un determinado segmento
-            i=(*mv).cant_seg;
+            //i=(*mv).cant_seg;
+            i=0;
             while ((*mv).TablaDeDatos[i].pos!=-1 && (*mv).TablaDeDatos[i].pos!=comienzo && i<=7)
                 i++;
             if ((*mv).TablaDeDatos[i].pos!=-1 && i<=7){//si existe, AX=0 CX=tamano de ese segmento
@@ -469,7 +471,7 @@ void sys_segmento(long int op_seg,long int tamano,long int comienzo,MV *mv){
             }else{//si no hay espacio para alojar en nuevo segmento
                 (*mv).TablaRegistros[11]=-1;//EBX=-1;
                 (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000;
-                (*mv).TablaRegistros[10]+=(0xCC)<<8;//AH=CC
+                (*mv).TablaRegistros[10]+=(0xCC);//AH=CC
             }
         }
     }else//si la operacion no existe
@@ -506,6 +508,7 @@ void sys_disco(MV *mv){
                 while(i<=al*512 && !feof(arch)){
                     fread(&dato,sizeof(dato),1,arch);
                     (*mv).TablaMemoria[(*mv).TablaDeDatos[puntero].pos+offset+i-1]=dato;
+                    printf("%c ",(*mv).TablaMemoria[(*mv).TablaDeDatos[puntero].pos+offset+i-1]);
                     i++;
                 }
                 //preguntar si se quiere leer sector inexistente pero dentro de parametros de disco se devuelve 0 y se extiende arch
@@ -531,7 +534,6 @@ void sys_disco(MV *mv){
                     dato=(*mv).TablaMemoria[(*mv).TablaDeDatos[puntero].pos+offset+i];
                     fwrite(&dato,sizeof(dato),1,arch);
                 }
-                rewind(arch);
                 fclose(arch);
                 ah=0;//aca el feedback
                 (*mv).TablaRegistros[10]=0xFFFF00FF;//operacion exitosa
@@ -628,7 +630,7 @@ char check_escritura_disco(short int al,short int ch,short int cl,short int dh,s
     long int resta_final=stop_disk-movimiento_disco(ch,cl,dh,dl,mv)-al*512;//me fijo si tengo espacio para escribir en el disco
     if (resta_final>=0){
         if (tamano>=al*512){
-           return 0;
+            return 0;
         }else
             return 0xCC;
     }else
@@ -849,7 +851,7 @@ unsigned short int celdas_memo(long int op){
     aux2++;
     return aux2;
 }
-int memory_left(MV mv){
+unsigned int memory_left(MV mv){
     int i=0;
     unsigned int aux=memory;
     while (mv.TablaDeDatos[i].pos!=-1){
