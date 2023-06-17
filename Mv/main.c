@@ -282,9 +282,10 @@ void Inicio_discos(MV mv){
     char aux;
     FILE *arch;
     unsigned char header[512];
-    for (int i=0;i<=mv.tds.n;i++){
+    int i;
+    for (i=0;i<=mv.tds.n;i++){
         arch=fopen(mv.tds.arch_disk[i],"rb");
-        if (arch!=NULL){
+        //if (arch!=NULL){
             fread(&aux,sizeof(char),1,arch);
             fclose(arch);
             if (aux!='V'){
@@ -293,7 +294,7 @@ void Inicio_discos(MV mv){
                 fwrite(header,sizeof(header),1,arch);
                 fclose(arch);
             }
-        }
+      // }
     }
 }
 void armar_header(unsigned char *header){
@@ -322,17 +323,17 @@ void armar_header(unsigned char *header){
     header[30]=fecha_actual->tm_sec;
     header[31]=0;//como hacemos las decimas
 
-    header[31]=1;//dinamico
-    header[32]=(0x80)&0xFF;//cilindro
-    header[33]=0x80;//cabeza
-    header[34]=0x80;//sectores
+    header[32]=1;//dinamico
+    header[33]=(0x80)&0xFF;//cilindro
+    header[34]=0x80;//cabeza
+    header[35]=0x80;//sectores
 
-    header[35]=0x00;
     header[36]=0x00;
-    header[37]=0x02;
-    header[38]=0x00;//tamano sector
+    header[37]=0x00;
+    header[38]=0x02;
+    header[39]=0x00;//tamano sector
 
-    for (int i=39;i<=511;i++){
+    for (int i=40;i<=511;i++){
         header[i]=0;//relleno con 0
     }
 }

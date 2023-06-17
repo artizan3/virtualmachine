@@ -73,10 +73,10 @@ void Escribe(long int valor,unsigned char tipo,int tamano);
 void EscribeString(char *palabra,unsigned int tamanostr,long int pos,MV *mv);
 void LeeString(unsigned int tamanostr,long int pos,MV *mv);
 void sys_segmento(long int op_seg,long int tamano,long int comienzo,MV *mv);
-void sys_disco(long int AX,unsigned int CX,long int DX,long int EBX,MV *mv);
+void sys_disco(MV *mv);
 char comprobar_parametros_disco(short int ah,short int dl,short int ch,short int cl,short int dh,MV mv);
-int max_disco(short int dl,MV mv);
-long int movimiento_disco(short int ch,short int cl,short int dh,short int dl,MV mv);
+unsigned int max_disco(short int dl,MV mv);
+unsigned long int movimiento_disco(short int ch,short int cl,short int dh,short int dl,MV mv);
 char check_escritura_disco(short int al,short int ch,short int cl,short int dh,short int dl,long int EBX,MV mv);
 char chek_lectura_disco(long int EBX,MV mv,short int al);
 long int Suma_reg(char tipo,long int op,MV mv);
@@ -375,7 +375,7 @@ void SYS(long int op,char top,MV *mv){
     if (valor==0xE)
         sys_segmento(op_seg,tamanostr,indice,mv);
     if (valor==0xD)
-        sys_disco(op_seg,tamanostr,offset,indice,mv);
+        sys_disco(mv);
     if (valor==0xF && strcmp(direVMI,"")!=0)
         Toggle_debbug=1;
 }
@@ -475,16 +475,17 @@ void sys_segmento(long int op_seg,long int tamano,long int comienzo,MV *mv){
     }else//si la operacion no existe
         (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000+1;
 }
-void sys_disco(long int AX,unsigned int CX,long int DX,long int EBX,MV *mv){
+void sys_disco(MV *mv){
     FILE *arch;
-    short int al=(AX)&0x000000FF;//cantidad de sectores para leer o escribir
-    short int ah=(AX)>>8;//accion y retroalimentacion
-    short int cl=(CX)&0x000000FF;//num cabeza
-    short int ch=(CX)>>8;//num cilindro
-    short int dl=(DX)&0x000000FF;//num disco
+    short int al=(*mv).TablaRegistros[10]&0x000000FF;//cantidad de sectores para leer o escribir
+    short int ah=((*mv).TablaRegistros[10]&0x0000FF00)>>8;//accion y retroalimentacion
+    short int cl=(*mv).TablaRegistros[12]&0x000000FF;//num cabeza
+    short int ch=((*mv).TablaRegistros[12]&0x0000FF00)>>8;//num cilindro
+    short int dl=(*mv).TablaRegistros[13]&0x000000FF;//num disco
     dl--;//YA QUE NUESTROS DISCOS ARRANCAN A CONTARSE DESDE EL 0
-    short int dh=(DX)>>8;//num sector
+    short int dh=((*mv).TablaRegistros[13]&0x0000FF00)>>8;//num sector
     //EBX indica la primer celda del buffer de lectura/escritura
+    long int EBX=(*mv).TablaRegistros[11];
     char aux=comprobar_parametros_disco(ah,dl,ch,cl,dh,*mv);
     if (aux==0){
         if (ah==0){//Consultar último estado
@@ -503,7 +504,7 @@ void sys_disco(long int AX,unsigned int CX,long int DX,long int EBX,MV *mv){
                 int offset=(EBX&0x0000FFFF);
                 int i=1;
                 while(i<=al*512 && !feof(arch)){
-                    fread(dato,sizeof(dato),1,arch);
+                    fread(&dato,sizeof(dato),1,arch);
                     (*mv).TablaMemoria[(*mv).TablaDeDatos[puntero].pos+offset+i-1]=dato;
                     i++;
                 }
@@ -521,27 +522,26 @@ void sys_disco(long int AX,unsigned int CX,long int DX,long int EBX,MV *mv){
         if (ah==0x03){//escritura
             aux=check_escritura_disco(al,ch,cl,dh,dl,EBX,*mv);
             if (aux==0){//aca realiza la escritura
-                FILE *arch=fopen((*mv).tds.arch_disk[dl],"wb");
+                FILE *arch=fopen((*mv).tds.arch_disk[dl],"r+b");
                 fseek(arch,movimiento_disco(ch,cl,dh,dl,*mv),SEEK_SET);
                 char dato;
                 int puntero=(EBX&0xFFFF0000)>>16;
                 int offset=(EBX&0x0000FFFF);
                 for (int i=0;i<al*512;i++){
                     dato=(*mv).TablaMemoria[(*mv).TablaDeDatos[puntero].pos+offset+i];
-                    fwrite(dato,sizeof(dato),1,arch);
+                    fwrite(&dato,sizeof(dato),1,arch);
                 }
+                rewind(arch);
                 fclose(arch);
-                //aca el feedback
-                ah=0;
+                ah=0;//aca el feedback
                 (*mv).TablaRegistros[10]=0xFFFF00FF;//operacion exitosa
-                //al queda igual en este caso ya que si no, no se pudiera haber hecho la transferencia
             }else
                 ah=aux;
                 (*mv).TablaRegistros[10]=0xFFFF00FF;
                 (*mv).TablaRegistros[10]+=(ah<<8)&0x0000FF00;
         }
         if (ah==0x08){
-            int i=32;
+            int i=33;
             arch=fopen((*mv).tds.arch_disk[dl],"rb");
             fseek(arch, i, SEEK_SET);
             fread(&ch,sizeof(char),1,arch);//guardar en reg
@@ -568,7 +568,7 @@ void sys_disco(long int AX,unsigned int CX,long int DX,long int EBX,MV *mv){
 }
 char comprobar_parametros_disco(short int ah,short int dl,short int ch,short int cl,short int dh,MV mv){
     int aux;
-    char aux2;
+    unsigned char aux2;
     FILE *arch;
     if (ah!=0x00 && ah!=0x02 && ah!=0x03 && ah!=0x08){
         aux=0x01;//si la op es incorrecta
@@ -577,7 +577,7 @@ char comprobar_parametros_disco(short int ah,short int dl,short int ch,short int
             aux=0x31;//si el numero de disco no existe
         else{
             arch=fopen(mv.tds.arch_disk[dl],"rb");
-            int i=32;
+            int i=33;
             fseek(arch, i, SEEK_SET);
             fread(&aux2,sizeof(char),1,arch);
             if (ch>aux2)
@@ -599,9 +599,9 @@ char comprobar_parametros_disco(short int ah,short int dl,short int ch,short int
     }
     return aux;
 }
-int max_disco(short int dl,MV mv){
-    char tot_dis,tot_h,tot_sec;
-    int i=32;
+unsigned int max_disco(short int dl,MV mv){
+    unsigned char tot_dis,tot_h,tot_sec;
+    int i=33;
     FILE *arch=fopen(mv.tds.arch_disk[dl],"rb");
     fseek(arch, i, SEEK_SET);
     fread(&tot_dis,sizeof(char),1,arch);//guardar en reg
@@ -610,9 +610,9 @@ int max_disco(short int dl,MV mv){
     fclose(arch);
     return (1+tot_dis*tot_h*tot_sec)*512;
 }
-long int movimiento_disco(short int ch,short int cl,short int dh,short int dl,MV mv){
-    char cant_cab,cant_sec;
-    int i=33;
+unsigned long int movimiento_disco(short int ch,short int cl,short int dh,short int dl,MV mv){
+    unsigned char cant_cab,cant_sec;
+    int i=34;
     FILE *arch=fopen(mv.tds.arch_disk[dl],"rb");
     fseek(arch, i, SEEK_SET);
     fread(&cant_cab,sizeof(char),1,arch);//guardar en reg
@@ -621,7 +621,7 @@ long int movimiento_disco(short int ch,short int cl,short int dh,short int dl,MV
     return (1+ch*cant_cab*cant_sec+cl*cant_sec+dh)*512;
 }
 char check_escritura_disco(short int al,short int ch,short int cl,short int dh,short int dl,long int EBX,MV mv){
-    long int stop_disk=max_disco(dl,mv);//valor total del disco
+    unsigned long int stop_disk=max_disco(dl,mv);//valor total del disco
     int offset=EBX&0x0000FFFF;
     int pointer=(EBX&0xFFFF0000)>>16;
     int tamano=mv.TablaDeDatos[pointer].tamano-offset;//me fijo si tengo espacio para leer de la memo
