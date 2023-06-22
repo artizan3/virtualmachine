@@ -19,6 +19,10 @@ int main(int argc,char *argv[]){
     mv.tds.n=-1;
     mv.cant_seg=0;
     unsigned short int diss=0;
+<<<<<<< Updated upstream
+=======
+    diss=1;
+>>>>>>> Stashed changes
     Lectura_argumentos(argc,argv,&diss,&memory,direVMI,&mv);
     Inicio_discos(mv);
     Inicia_registro(&mv);
@@ -27,10 +31,12 @@ int main(int argc,char *argv[]){
         Dissasembler_mostrar(mv);
     Lectura(&mv);
 }
-
 void Inicia_registro(MV *mv){
         (*mv).TablaRegistros[0]=0;//cs
         (*mv).TablaRegistros[1]=0x00010000;//ds
+        (*mv).TablaRegistros[2]=-1;
+        (*mv).TablaRegistros[3]=-1;
+        (*mv).TablaRegistros[4]=-1;
         (*mv).TablaRegistros[5]=0;//ip
         (*mv).TablaRegistros[8]=0;//cc
         (*mv).TablaRegistros[9]=0;//ac
@@ -46,6 +52,10 @@ void Inicia_memoria(char *dire,MV *mv,unsigned int memory){
         fread(nombre,sizeof(nombre),1,arch);//lee el titulo
         fread(&version,sizeof(char),1,arch);//lee la version
         if (version==2 || version==3){
+<<<<<<< Updated upstream
+=======
+            (*mv).TablaRegistros[1]=-1;
+>>>>>>> Stashed changes
             unsigned int vec[6];
             for (int j=0;j<5;j++){
                 valor=0;
@@ -88,7 +98,7 @@ void Lectura(MV *mv){
     long int op1,op2;
     int corte;
     char dbg;
-    while ((*mv).TablaRegistros[5]!=(*mv).TablaDeDatos[1].pos)
+    while ((*mv).TablaRegistros[5]!=-1 && (*mv).TablaRegistros[5]<(*mv).TablaDeDatos[0].tamano)
     {
         op1=0;
         op2=0;
@@ -123,7 +133,7 @@ void Lectura(MV *mv){
         (*mv).TablaRegistros[5]++;// le sumo uno mas al ip antes de que se ejecute la operacion.
         chequeo_errores(top1,top2,cant,operacion,op1,op2,*mv);
         if (cant==0 && op1==0)
-            (*mv).TablaRegistros[5]=(*mv).TablaDeDatos[1].pos;
+            (*mv).TablaRegistros[5]=-1;
         else{
             if (Toggle_debbug==1){
                 scanf("%c",&dbg);
@@ -199,6 +209,7 @@ void SeteoV2(MV *mv,unsigned int vec[],unsigned int memory){
             (*mv).TablaDeDatos[c].tamano=vec[i];
             aux+=vec[i];
             c++;
+<<<<<<< Updated upstream
         }else{
            if (i==1)
                 (*mv).TablaRegistros[2]=-1;
@@ -208,6 +219,8 @@ void SeteoV2(MV *mv,unsigned int vec[],unsigned int memory){
                 (*mv).TablaRegistros[3]=-1;
             if (i==4)
                 (*mv).TablaRegistros[4]=-1;
+=======
+>>>>>>> Stashed changes
         }
     }
     //aca deja los segmentos q no existen en -1, ej:

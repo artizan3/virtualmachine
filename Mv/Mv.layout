@@ -4,6 +4,7 @@
 	<ActiveTarget name="Debug" />
 	<File name="funciones.h" open="1" top="1" tabpos="2" split="0" active="1" splitpos="0" zoom_1="8" zoom_2="0">
 		<Cursor>
+<<<<<<< Updated upstream
 			<Cursor1 position="16269" topLine="156" />
 		</Cursor>
 		<Folding>
@@ -58,7 +59,56 @@
 	<File name="dissasembler.h" open="1" top="0" tabpos="3" split="0" active="1" splitpos="0" zoom_1="6" zoom_2="0">
 		<Cursor>
 			<Cursor1 position="2401" topLine="57" />
+=======
+			<Cursor1 position="2401" topLine="57" />
 		</Cursor>
+	</File>
+	<File name="main.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="7" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="4849" topLine="138" />
+		</Cursor>
+		<Folding>
+			<Collapse line="215" />
+			<Collapse line="275" />
+			<Collapse line="294" />
+		</Folding>
+	</File>
+	<File name="funciones.h" open="1" top="1" tabpos="2" split="0" active="1" splitpos="0" zoom_1="4" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="13474" topLine="228" />
+>>>>>>> Stashed changes
+		</Cursor>
+		<Folding>
+			<Collapse line="88" />
+			<Collapse line="108" />
+			<Collapse line="141" />
+			<Collapse line="160" />
+			<Collapse line="174" />
+			<Collapse line="219" />
+			<Collapse line="223" />
+			<Collapse line="242" />
+			<Collapse line="261" />
+			<Collapse line="280" />
+			<Collapse line="379" />
+			<Collapse line="389" />
+			<Collapse line="415" />
+			<Collapse line="426" />
+			<Collapse line="477" />
+			<Collapse line="594" />
+			<Collapse line="605" />
+			<Collapse line="615" />
+			<Collapse line="629" />
+			<Collapse line="642" />
+			<Collapse line="646" />
+			<Collapse line="650" />
+			<Collapse line="654" />
+			<Collapse line="658" />
+			<Collapse line="662" />
+			<Collapse line="666" />
+			<Collapse line="669" />
+			<Collapse line="672" />
+			<Collapse line="676" />
+		</Folding>
 	</File>
 	<File name="main.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="7" zoom_2="0">
 		<Cursor>

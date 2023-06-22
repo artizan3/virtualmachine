@@ -1,5 +1,6 @@
 # depslib dependency file v1.0
 1687022714 source:c:\users\bruno trinitario\desktop\mv\main.c
+<<<<<<< Updated upstream
 	<stdio.h>
 	<stdlib.h>
 	"funciones.h"
@@ -12,15 +13,42 @@
 1686880681 c:\users\bruno trinitario\desktop\mv\dissasembler.h
 
 1681998058 source:c:\users\bruno\onedrive\desktop\mv\main.c
+=======
+>>>>>>> Stashed changes
 	<stdio.h>
 	<stdlib.h>
 	"funciones.h"
 	"dissasembler.h"
+<<<<<<< Updated upstream
 
 1682004838 c:\users\bruno\onedrive\desktop\mv\funciones.h
 	<time.h>
 
 1681998058 c:\users\bruno\onedrive\desktop\mv\dissasembler.h
+
+1686880681 source:c:\users\bruno trinitario\desktop\virtualmachine-main\mv\main.c
+=======
+	<time.h>
+
+1687037804 c:\users\bruno trinitario\desktop\mv\funciones.h
+	<time.h>
+
+1686880681 c:\users\bruno trinitario\desktop\mv\dissasembler.h
+
+1687369037 source:c:\users\bruno\onedrive\desktop\mv\main.c
+>>>>>>> Stashed changes
+	<stdio.h>
+	<stdlib.h>
+	"funciones.h"
+	"dissasembler.h"
+	<time.h>
+
+<<<<<<< Updated upstream
+=======
+1687369640 c:\users\bruno\onedrive\desktop\mv\funciones.h
+	<time.h>
+
+1687235633 c:\users\bruno\onedrive\desktop\mv\dissasembler.h
 
 1686880681 source:c:\users\bruno trinitario\desktop\virtualmachine-main\mv\main.c
 	<stdio.h>
@@ -29,6 +57,7 @@
 	"dissasembler.h"
 	<time.h>
 
+>>>>>>> Stashed changes
 1686939654 c:\users\bruno trinitario\desktop\virtualmachine-main\mv\funciones.h
 	<time.h>
 
