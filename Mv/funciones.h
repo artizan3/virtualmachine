@@ -435,22 +435,6 @@ void sys_segmento(MV *mv){
     int i;
     int op_seg=(*mv).TablaRegistros[10]&0x0000FFFF;
     int tamano=(*mv).TablaRegistros[12]&0x0000FFFF;
-<<<<<<< Updated upstream
-    long int comienzo=(*mv).TablaRegistros[11];
-    if (op_seg==0 || op_seg==1){
-        if (op_seg==0){//busca un determinado segmento
-            //i=(*mv).cant_seg;
-            i=0;
-            while ((*mv).TablaDeDatos[i].pos!=-1 && (*mv).TablaDeDatos[i].pos!=comienzo && i<=7)
-                i++;
-            if ((*mv).TablaDeDatos[i].pos!=-1 && i<=7){//si existe, AX=0 CX=tamano de ese segmento
-                (*mv).TablaRegistros[12]=(*mv).TablaRegistros[12]&0xFFFF0000;
-                (*mv).TablaRegistros[12]+=(*mv).TablaDeDatos[i].tamano;
-            }else{//si no existe AX=%31 y CX=0
-                (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000;
-                (*mv).TablaRegistros[10]+=0x00000031;
-                (*mv).TablaRegistros[12]=(*mv).TablaRegistros[12]&0xFFFF0000;
-=======
     if (op_seg==0 || op_seg==1){
         if (op_seg==0){
             int puntero=(*mv).TablaRegistros[11]>>16;
@@ -462,7 +446,6 @@ void sys_segmento(MV *mv){
                 (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000;
                 (*mv).TablaRegistros[10]+=49;
                 (*mv).TablaRegistros[12]&=0xFFFF0000;
->>>>>>> Stashed changes
             }
         }else{//va a aniadir un segmento :)
             if (tamano<memory_left(*mv)){//si hay memoria dispo
@@ -477,16 +460,6 @@ void sys_segmento(MV *mv){
                     (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000;
                     (*mv).TablaRegistros[10]+=(0x0000FFFF);
                 }else{//se crea el segmento
-<<<<<<< Updated upstream
-                    (*mv).TablaRegistros[11]=aux;
-                    (*mv).TablaDeDatos[i].pos=aux;
-                    (*mv).TablaDeDatos[i].tamano=tamano;
-                    (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000;//ax=00
-                }
-            }else{//si no hay espacio para alojar en nuevo segmento
-                (*mv).TablaRegistros[11]=-1;//EBX=-1;
-                (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000;
-=======
                     (*mv).TablaRegistros[11]=0;
                     (*mv).TablaRegistros[11]+=i<<16;
                     (*mv).TablaDeDatos[i].pos=aux;
@@ -496,7 +469,6 @@ void sys_segmento(MV *mv){
             }else{//si no hay espacio para alojar en nuevo segmento
                 (*mv).TablaRegistros[11]=-1;//EBX=-1;
                 (*mv).TablaRegistros[10]&=0xFFFF0000;
->>>>>>> Stashed changes
                 (*mv).TablaRegistros[10]+=(0xCC);//AH=CC
             }
         }
@@ -510,63 +482,34 @@ void sys_disco(MV *mv){
     short int cl=(*mv).TablaRegistros[12]&0x000000FF;//num cabeza
     short int ch=((*mv).TablaRegistros[12]&0x0000FF00)>>8;//num cilindro
     short int dl=(*mv).TablaRegistros[13]&0x000000FF;//num disco
-<<<<<<< Updated upstream
-    dl--;//YA QUE NUESTROS DISCOS ARRANCAN A CONTARSE DESDE EL 0
-    short int dh=((*mv).TablaRegistros[13]&0x0000FF00)>>8;//num sector
-    //EBX indica la primer celda del buffer de lectura/escritura
-    long int EBX=(*mv).TablaRegistros[11];
-=======
     short int dh=((*mv).TablaRegistros[13]&0x0000FF00)>>8;//num sector
     long int EBX=(*mv).TablaRegistros[11];//EBX indica la primer celda del buffer de lectura/escritura
->>>>>>> Stashed changes
     char aux=comprobar_parametros_disco(ah,dl,ch,cl,dh,*mv);
     if (aux==0){
         if (ah==0){//Consultar último estado
             ah=ah_aux;
-<<<<<<< Updated upstream
-            (*mv).TablaRegistros[10]=0xFFFF00FF;
-=======
             (*mv).TablaRegistros[10]&=0xFFFF00FF;
->>>>>>> Stashed changes
             (*mv).TablaRegistros[10]+=(ah<<8)&0x0000FF00;
         }
         if (ah==0x02){//lectura
             aux=chek_lectura_disco(EBX,*mv,al);
-<<<<<<< Updated upstream
-            (*mv).TablaRegistros[10]=0xFFFF00FF;
-=======
             (*mv).TablaRegistros[10]&=0xFFFF00FF;
->>>>>>> Stashed changes
             if(aux==0){
                 FILE *arch=fopen((*mv).tds.arch_disk[dl],"rb");
                 fseek(arch,movimiento_disco(ch,cl,dh,dl,*mv),SEEK_SET);
                 char dato;
                 int puntero=(EBX&0xFFFF0000)>>16; //deberia apuntar despues de extrasegment a partir de 64
                 int offset=(EBX&0x0000FFFF);
-<<<<<<< Updated upstream
-                int i=1;
-                while(i<=al*512 && !feof(arch)){
-                    fread(&dato,sizeof(dato),1,arch);
-                    (*mv).TablaMemoria[(*mv).TablaDeDatos[puntero].pos+offset+i-1]=dato;
-                    printf("%c ",(*mv).TablaMemoria[(*mv).TablaDeDatos[puntero].pos+offset+i-1]);
-                    i++;
-=======
                 int i=0;
                 for (i;i<al*512;i++){
                     fread(&dato,sizeof(dato),1,arch);
                     (*mv).TablaMemoria[(*mv).TablaDeDatos[puntero].pos+offset+i]=dato;
->>>>>>> Stashed changes
                 }
                 //preguntar si se quiere leer sector inexistente pero dentro de parametros de disco se devuelve 0 y se extiende arch
                 fclose(arch);
                 ah=0;
-<<<<<<< Updated upstream
-                al=i/512;
-                (*mv).TablaRegistros[10]=(*mv).TablaRegistros[10]&0xFFFF0000;//ah=0
-=======
                 al=(i+1)/512;
                 (*mv).TablaRegistros[10]&=0xFFFF0000;//ah=0
->>>>>>> Stashed changes
                 (*mv).TablaRegistros[10]+=(al)&0xFF;//al=sectores tranferidos
             }else{
                 ah=aux;
@@ -587,17 +530,10 @@ void sys_disco(MV *mv){
                 }
                 fclose(arch);
                 ah=0;//aca el feedback
-<<<<<<< Updated upstream
-                (*mv).TablaRegistros[10]=0xFFFF00FF;//operacion exitosa
-            }else
-                ah=aux;
-                (*mv).TablaRegistros[10]=0xFFFF00FF;
-=======
                 (*mv).TablaRegistros[10]&=0xFFFF00FF;//operacion exitosa
             }else
                 ah=aux;
                 (*mv).TablaRegistros[10]&=0xFFFF00FF;
->>>>>>> Stashed changes
                 (*mv).TablaRegistros[10]+=(ah<<8)&0x0000FF00;
         }
         if (ah==0x08){
@@ -605,25 +541,6 @@ void sys_disco(MV *mv){
             arch=fopen((*mv).tds.arch_disk[dl],"rb");
             fseek(arch, i, SEEK_SET);
             fread(&ch,sizeof(char),1,arch);//guardar en reg
-<<<<<<< Updated upstream
-            ch&=0xFF;
-            (*mv).TablaRegistros[12]=0xFFFF00FF;
-            (*mv).TablaRegistros[12]+=(ch<<8);
-            fread(&cl,sizeof(char),1,arch);//guardar en reg
-            cl&=0xFF;
-            (*mv).TablaRegistros[12]=0xFFFFFF00;
-            (*mv).TablaRegistros[12]+=(cl<<8);
-            fread(&dh,sizeof(char),1,arch);//guardar en reg
-            dh&=0xFF;
-            (*mv).TablaRegistros[13]=0xFFFF00FF;
-            (*mv).TablaRegistros[13]+=(dh<<8);
-            ah=0;
-            (*mv).TablaRegistros[10]=0xFFFF00FF;//guarda ah
-        }
-    }else{
-        ah=aux;
-        (*mv).TablaRegistros[10]=0xFFFF00FF;
-=======
             (*mv).TablaRegistros[12]&=0xFFFF00FF;
             (*mv).TablaRegistros[12]+=(ch<<8);
             fread(&cl,sizeof(char),1,arch);//guardar en reg
@@ -638,7 +555,6 @@ void sys_disco(MV *mv){
     }else{
         ah=aux;
         (*mv).TablaRegistros[10]&=0xFFFF00FF;
->>>>>>> Stashed changes
         (*mv).TablaRegistros[10]+=(ah<<8)&0x0000FF00;
     }
     ah_aux=ah;
@@ -657,17 +573,6 @@ char comprobar_parametros_disco(short int ah,short int dl,short int ch,short int
             int i=33;
             fseek(arch, i, SEEK_SET);
             fread(&aux2,sizeof(char),1,arch);
-<<<<<<< Updated upstream
-            if (ch>aux2)
-                aux=0x0B;//si el numero de cilindro no existe
-            else{
-                fread(&aux2,sizeof(char),1,arch);
-                if (cl>aux2)
-                    aux=0x0C;//si el numero de cabeza no existe
-                else{
-                    fread(&aux2,sizeof(char),1,arch);
-                    if (dh>aux2)
-=======
             if (ch>=aux2)
                 aux=0x0B;//si el numero de cilindro no existe
             else{
@@ -677,7 +582,6 @@ char comprobar_parametros_disco(short int ah,short int dl,short int ch,short int
                 else{
                     fread(&aux2,sizeof(char),1,arch);
                     if (dh>=aux2)
->>>>>>> Stashed changes
                         aux=0x0D;//si el numero de sector no existe
                     else
                         aux=0;//si esta en condiciones
@@ -716,11 +620,7 @@ char check_escritura_disco(short int al,short int ch,short int cl,short int dh,s
     int tamano=mv.TablaDeDatos[pointer].tamano-offset;//me fijo si tengo espacio para leer de la memo
     long int resta_final=stop_disk-movimiento_disco(ch,cl,dh,dl,mv)-al*512;//me fijo si tengo espacio para escribir en el disco
     if (resta_final>=0){
-<<<<<<< Updated upstream
-        if (tamano>=al*512){
-=======
         if (tamano>=al*512-1){
->>>>>>> Stashed changes
             return 0;
         }else
             return 0xCC;
@@ -731,11 +631,7 @@ char chek_lectura_disco(long int EBX,MV mv,short int al){
     int offset=EBX&0x0000FFFF;
     int pointer=(EBX&0xFFFF0000)>>16;
     int tamano=mv.TablaDeDatos[pointer].tamano-offset;
-<<<<<<< Updated upstream
-    if(tamano>=al*512)
-=======
     if(tamano>=al*512-1)
->>>>>>> Stashed changes
         return 0;
     else
         return 0x04;

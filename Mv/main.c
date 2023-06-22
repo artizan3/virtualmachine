@@ -19,10 +19,7 @@ int main(int argc,char *argv[]){
     mv.tds.n=-1;
     mv.cant_seg=0;
     unsigned short int diss=0;
-<<<<<<< Updated upstream
-=======
     diss=1;
->>>>>>> Stashed changes
     Lectura_argumentos(argc,argv,&diss,&memory,direVMI,&mv);
     Inicio_discos(mv);
     Inicia_registro(&mv);
@@ -52,10 +49,7 @@ void Inicia_memoria(char *dire,MV *mv,unsigned int memory){
         fread(nombre,sizeof(nombre),1,arch);//lee el titulo
         fread(&version,sizeof(char),1,arch);//lee la version
         if (version==2 || version==3){
-<<<<<<< Updated upstream
-=======
             (*mv).TablaRegistros[1]=-1;
->>>>>>> Stashed changes
             unsigned int vec[6];
             for (int j=0;j<5;j++){
                 valor=0;
@@ -209,18 +203,6 @@ void SeteoV2(MV *mv,unsigned int vec[],unsigned int memory){
             (*mv).TablaDeDatos[c].tamano=vec[i];
             aux+=vec[i];
             c++;
-<<<<<<< Updated upstream
-        }else{
-           if (i==1)
-                (*mv).TablaRegistros[2]=-1;
-            if (i==2)
-                (*mv).TablaRegistros[1]=-1;
-            if (i==3)
-                (*mv).TablaRegistros[3]=-1;
-            if (i==4)
-                (*mv).TablaRegistros[4]=-1;
-=======
->>>>>>> Stashed changes
         }
     }
     //aca deja los segmentos q no existen en -1, ej:
